@@ -118,6 +118,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 pip install fastapi uvicorn pandas numpy scikit-learn tensorflow joblib
 uvicorn app:app --reload --port 8000
+
+for run backend after installation:
+python -m uvicorn app:app --reload --port 8000
 ```
 The API Swagger documentation will be instantly available at `http://localhost:8000/docs`.
 
