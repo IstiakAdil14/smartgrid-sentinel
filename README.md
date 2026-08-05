@@ -1,5 +1,7 @@
 # SmartGrid Sentinel ⚡
 
+
+
 SmartGrid Sentinel is an advanced AI-powered risk prediction and monitoring system designed to forecast and prevent failures in smart power grids. By analyzing a multitude of factors—ranging from grid loads and transformer states to real-time weather conditions—it accurately predicts the grid's risk level over a 4-hour horizon. The project focuses specifically on the **Sylhet Division** of Bangladesh, providing insights at both the district and upazila levels.
 
 ## 🌟 Key Features
@@ -119,6 +121,9 @@ uvicorn app:app --reload --port 8000
 ```
 The API Swagger documentation will be instantly available at `http://localhost:8000/docs`.
 
+for run backend after installation:
+python -m uvicorn app:app --reload --port 8000
+
 ### 2. Start the Frontend Dashboard
 
 Open a separate terminal, navigate to the `frontend` directory, and run the Next.js app:
@@ -129,6 +134,10 @@ npm install
 npm run dev
 ```
 The modern dashboard will be available at `http://localhost:3000`. Select your district and upazila from the UI to view real-time grid risk predictions!
+
+
+**Demo Video:** [Watch Demo Video](https://drive.google.com/file/d/1jSmiQn70eyOF-cmLPmA6pbxFwiAXJIr7/view?usp=drive_link)
+
 
 ---
 

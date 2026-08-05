@@ -65,3 +65,6 @@ build/
 
 # Ignore very large datasets if needed (uncomment if the dataset shouldn't be pushed)
 # dataset/*.csv
+
+# Ignore demo videos
+screenDemo.mp4
