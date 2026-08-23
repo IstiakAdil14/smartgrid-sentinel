@@ -1,209 +1,158 @@
+import sys
+import os
+
+# Add backend directory to sys.path to reuse preprocessing
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKEND_DIR = os.path.join(BASE_DIR, "backend")
+if BACKEND_DIR not in sys.path:
+    sys.path.append(BACKEND_DIR)
+
 import joblib
 import pandas as pd
 import numpy as np
+import torch
 from datetime import datetime, timedelta
+
+from preprocessing import preprocessor
+from app import Informer
 
 # ==========================
 # Load trained model
 # ==========================
-model = joblib.load("models/logistic_regression.pkl")
-scaler = joblib.load("models/scaler.pkl")
-target_encoder = joblib.load("models/target_encoder.pkl")
+CHECKPOINT_PATH = os.path.join(BASE_DIR, "models", "checkpoints", "Informer", "epoch_10.pth")
 
-# Get the correct feature order from the scaler
-feature_order = list(scaler.feature_names_in_)
+num_features = len(preprocessor.feature_order)
+num_classes = len(preprocessor.target_encoder.classes_)
+seq_len = 5
+
+model = Informer(c_in=num_features, c_out=num_classes, seq_len=seq_len)
+model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location='cpu', weights_only=True))
+model.eval()
 
 # ==========================
 # User Inputs
 # ==========================
 
 print("="*60)
-print(" SMART GRID RISK PREDICTION (NEXT 4 HOURS)")
+print(" SMART GRID RISK PREDICTION")
+print(" Forecast Horizon: Next 2 Hours")
+print(" Input History: Previous 5 observations (~10 hours)")
 print("="*60)
 
-temperature = float(input("Temperature (°C): "))
-humidity = float(input("Humidity (%): "))
-rainfall = float(input("Rainfall (mm): "))
-wind_speed = float(input("Wind Speed (m/s): "))
-
-electricity_demand = float(input("Electricity Demand (MW): "))
-renewable_generation = float(input("Renewable Generation (MW): "))
-transformer_load = float(input("Transformer Load (%): "))
-
-transformer_age = int(input("Transformer Age (years): "))
-transformer_capacity = float(input("Transformer Capacity (kVA): "))
-outage_history = int(input("Previous Outages: "))
-population_density = float(input("Population Density: "))
-industrial_load_ratio = float(input("Industrial Load Ratio (0-1): "))
-
-hour = int(input("Current Hour (0-23): "))
-weekday = int(input("Weekday (0=Mon ... 6=Sun): "))
-
-district = input("District: ")
-upazila = input("Upazila: ")
-area_type = input("Area Type (Urban/Rural): ")
-substation_id = input("Substation ID: ")
-feeder_id = input("Feeder ID: ")
-maintenance_due = input("Maintenance Due (Yes/No): ")
-weather_state = input("Weather (Sunny/Cloudy/Rainy): ")
-
-# =====================================================
-# Label Encoding
-# (Must match preprocessing notebook)
-# =====================================================
-
-weather_map = {
-    "Sunny": 0,
-    "Cloudy": 1,
-    "Rainy": 2
+division_districts = {
+    "Chattogram": [
+        "Cox's Bazar", "Chattogram", "Rangamati", "Chandpur", 
+        "Noakhali", "Bandarban", "Cumilla", "Lakshmipur", 
+        "Khagrachhari", "Brahmanbaria", "Feni"
+    ],
+    "Sylhet": [
+        "Habiganj", "Sylhet", "Moulvibazar", "Sunamganj"
+    ]
 }
 
-area_map = {
-    "Urban": 0,
-    "Rural": 1
-}
+print("\nAvailable Divisions:")
+divisions = list(division_districts.keys())
+for i, d in enumerate(divisions):
+    print(f"{i+1}. {d}")
 
-maintenance_map = {
-    "No": 0,
-    "Yes": 1
-}
+try:
+    div_idx = int(input("\nSelect Division Number: ")) - 1
+    division = divisions[div_idx]
+except (ValueError, IndexError):
+    print("Invalid selection. Exiting.")
+    sys.exit(1)
 
-district_map = {
-    "Sylhet": 0,
-    "Habiganj": 1,
-    "Moulvibazar": 2,
-    "Sunamganj": 3
-}
+print(f"\nAvailable Districts in {division}:")
+districts = sorted(division_districts[division])
+for i, d in enumerate(districts):
+    print(f"{i+1}. {d}")
 
-upazila_map = {
-    # Sylhet upazilas
-    "Balaganj": 0, "Beanibazar": 1, "Bishwanath": 2, "Companiganj": 3,
-    "Dakshin Surma": 4, "Fenchuganj": 5, "Golapganj": 6, "Gowainghat": 7,
-    "Jaintiapur": 8, "Kanaighat": 9, "Osmani Nagar": 10, "Sylhet Sadar": 11,
-    "Zakiganj": 12,
-    # Habiganj upazilas
-    "Ajmiriganj": 13, "Bahubal": 14, "Baniachang": 15, "Chunarughat": 16,
-    "Habiganj Sadar": 17, "Lakhai": 18, "Madhabpur": 19, "Nabiganj": 20,
-    "Shaistaganj": 21,
-    # Moulvibazar upazilas
-    "Barlekha": 22, "Juri": 23, "Kamalganj": 24, "Kulaura": 25,
-    "Moulvibazar Sadar": 26, "Rajnagar": 27, "Sreemangal": 28,
-    # Sunamganj upazilas
-    "Bishwamvarpur": 29, "Chhatak": 30, "Dakshin Sunamganj": 31, "Derai": 32,
-    "Dharmapasha": 33, "Dowarabazar": 34, "Jagannathpur": 35, "Jamalganj": 36,
-    "Sullah": 37, "Sunamganj Sadar": 38, "Tahirpur": 39, "Shantiganj": 40
-}
+try:
+    dist_idx = int(input("\nSelect District Number: ")) - 1
+    district = districts[dist_idx]
+except (ValueError, IndexError):
+    print("Invalid selection. Exiting.")
+    sys.exit(1)
 
-# Encode categorical inputs
-weather_state = weather_map.get(weather_state, 0)
-area_type = area_map.get(area_type, 0)
-maintenance_due = maintenance_map.get(maintenance_due, 0)
-district = district_map.get(district, 0)
-upazila = upazila_map.get(upazila, 0)
+print(f"\nAvailable Upazilas in {district}:")
+upazilas = sorted(preprocessor.df[preprocessor.df['district'] == district]['upazila'].unique())
+for i, u in enumerate(upazilas):
+    print(f"{i+1}. {u}")
 
-# Convert IDs into integers
-substation_id = int(substation_id.replace("SS_", ""))
-feeder_id = int(feeder_id.replace("FDR_", ""))
+try:
+    up_idx = int(input("\nSelect Upazila Number: ")) - 1
+    upazila = upazilas[up_idx]
+except (ValueError, IndexError):
+    print("Invalid selection. Exiting.")
+    sys.exit(1)
 
 # ==========================
-# Feature Vector
+# Feature Retrieval & Prediction
 # ==========================
+print("\nFetching latest historical telemetry...")
 
-# Create input data with correct feature order matching the training data
-data = {
-    'hour': hour,
-    'weekday': weekday,
-    'temperature': temperature,
-    'humidity': humidity,
-    'rainfall': rainfall,
-    'wind_speed': wind_speed,
-    'weather_state': weather_state,
-    'electricity_demand': electricity_demand,
-    'renewable_generation': renewable_generation,
-    'transformer_load': transformer_load,
-    'district': district,
-    'upazila': upazila,
-    'area_type': area_type,
-    'substation_id': substation_id,
-    'feeder_id': feeder_id,
-    'transformer_age': transformer_age,
-    'transformer_capacity': transformer_capacity,
-    'outage_history': outage_history,
-    'maintenance_due': maintenance_due,
-    'population_density': population_density,
-    'industrial_load_ratio': industrial_load_ratio
-}
+try:
+    X_tensor, pred_time, interval_hours, history_df = preprocessor.get_historical_sequence(district, upazila)
+except Exception as e:
+    print(f"\nError: {e}")
+    sys.exit(1)
 
-X = pd.DataFrame([data])
+X_torch = torch.tensor(X_tensor, dtype=torch.float32)
 
-# Reorder columns to match the scaler's expected order
-X = X[feature_order]
+with torch.no_grad():
+    out = model(X_torch)
+    probs = torch.softmax(out, dim=1).numpy()[0]
+    pred_idx = int(torch.argmax(out, dim=1).item())
 
-# ==========================
-# Scale
-# ==========================
-
-X_scaled = scaler.transform(X)
-
-# ==========================
-# Prediction
-# ==========================
-
-prediction = model.predict(X_scaled)[0]
-probability = model.predict_proba(X_scaled)[0]
-
-risk = target_encoder.inverse_transform([prediction])[0]
-
-# Calculate prediction time
-current_time = datetime.now().replace(
-    hour=hour,
-    minute=0,
-    second=0,
-    microsecond=0
-)
-prediction_time = current_time + timedelta(hours=4)
+risk = preprocessor.target_encoder.inverse_transform([pred_idx])[0]
 
 # ==========================
 # Display Results
 # ==========================
 
-print("\n")
-print("="*60)
-print("PREDICTION RESULTS")
-print("="*60)
+print("\n" + "="*50)
+print("SMART GRID RISK PREDICTION")
+print("="*50)
 
-print(f"\nCurrent Time   : {current_time.strftime('%H:%M')}")
-print(f"Prediction Time: {prediction_time.strftime('%H:%M')} (+4 Hours)")
-print(f"\nPredicted Risk : {risk}")
+print(f"\nLocation       : {district} - {upazila}")
+print(f"Forecast       : Next {interval_hours} Hours")
+print(f"History        : {len(history_df)} consecutive observations (~{len(history_df) * 2} hours)")
+
+print(f"\nPredicted Risk : {risk.upper()}")
 
 print("\nConfidence:")
+for label, prob in zip(preprocessor.target_encoder.classes_, probs):
+    print(f"{label:<14} : {prob*100:.1f}%")
 
-for label, prob in zip(target_encoder.classes_, probability):
-    print(f"{label:<8}: {prob*100:.2f}%")
+# Generate Evidence and Explanation
+latest_obs = history_df.iloc[-1]
+evidence = {
+    "transformer_load": float(latest_obs.get("transformer_load", 0.0)),
+    "electricity_demand": float(latest_obs.get("electricity_demand", 0.0)),
+    "renewable_generation": float(latest_obs.get("renewable_generation", 0.0)),
+    "temperature": float(latest_obs.get("temperature", 0.0)),
+    "rainfall": float(latest_obs.get("rainfall", 0.0)),
+    "wind_speed": float(latest_obs.get("wind_speed", 0.0))
+}
 
-print("\n")
+from nlp import generate_explanation
+explanation = generate_explanation(risk, evidence)
 
-# ==========================
-# Recommendations
-# ==========================
+print("\n" + "-"*50)
+print("WHY THIS RISK?")
+print("-"*50 + "\n")
 
-if risk == "Low":
-    print("Grid Status : Stable")
-    print("\nRecommendation:")
-    print("✓ Grid operating normally.")
-    print("✓ No preventive action required.")
+import textwrap
+print(textwrap.fill(explanation, width=50))
 
-elif risk == "Medium":
-    print("Grid Status : Moderate Stress")
-    print("\nRecommendation:")
-    print("• Monitor transformer loading.")
-    print("• Reduce peak demand if possible.")
-    print("• Prepare standby generation.")
+print("\n" + "-"*50)
+print("LATEST TELEMETRY EVIDENCE")
+print("-"*50 + "\n")
 
-else:  # High
-    print("Grid Status : Critical")
-    print("\nRecommendation:")
-    print("⚠ High overload risk detected.")
-    print("⚠ Dispatch maintenance team.")
-    print("⚠ Prepare load shedding plan.")
-    print("⚠ Increase reserve generation if available.")
+print(f"Transformer Load       : {evidence['transformer_load']:.1f}%")
+print(f"Electricity Demand     : {evidence['electricity_demand']:.1f} MW")
+print(f"Renewable Generation   : {evidence['renewable_generation']:.1f} MW")
+print(f"Temperature            : {evidence['temperature']:.1f} °C")
+print(f"Rainfall               : {evidence['rainfall']:.1f} mm")
+print(f"Wind Speed             : {evidence['wind_speed']:.1f} m/s")
+print()

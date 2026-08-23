@@ -9,22 +9,35 @@ interface PredictionFormProps {
 }
 
 export function PredictionForm({ onPredict }: PredictionFormProps) {
+  const [divisions, setDivisions] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [upazilas, setUpazilas] = useState<string[]>([]);
+  
+  const [selectedDivision, setSelectedDivision] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedUpazila, setSelectedUpazila] = useState('');
 
   useEffect(() => {
-    fetchDistricts();
+    fetchDivisions();
   }, []);
 
-  const fetchDistricts = async () => {
+  const fetchDivisions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/districts');
+      const response = await axios.get('http://localhost:8000/divisions');
+      setDivisions(response.data);
+    } catch (error) {
+      console.error('Error fetching divisions:', error);
+      setDivisions(['Chattogram', 'Sylhet']);
+    }
+  };
+
+  const fetchDistricts = async (division: string) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/districts/${division}`);
       setDistricts(response.data);
     } catch (error) {
       console.error('Error fetching districts:', error);
-      setDistricts(['Sylhet', 'Habiganj', 'Moulvibazar', 'Sunamganj']);
+      setDistricts([]);
     }
   };
 
@@ -34,13 +47,7 @@ export function PredictionForm({ onPredict }: PredictionFormProps) {
       setUpazilas(response.data);
     } catch (error) {
       console.error('Error fetching upazilas:', error);
-      const fallbackUpazilas: { [key: string]: string[] } = {
-        'Sylhet': ['Beanibazar', 'Sylhet Sadar', 'Jaintiapur'],
-        'Habiganj': ['Madhabpur', 'Habiganj Sadar', 'Ajmiriganj'],
-        'Moulvibazar': ['Sreemangal', 'Moulvibazar Sadar'],
-        'Sunamganj': ['Tahirpur', 'Sunamganj Sadar', 'Chhatak']
-      };
-      setUpazilas(fallbackUpazilas[district] || []);
+      setUpazilas([]);
     }
   };
 
@@ -62,7 +69,34 @@ export function PredictionForm({ onPredict }: PredictionFormProps) {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
+              Division
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MapPin className="h-4 w-4 text-slate-500" />
+              </div>
+              <select
+                value={selectedDivision}
+                onChange={(e) => {
+                  setSelectedDivision(e.target.value);
+                  setSelectedDistrict('');
+                  setSelectedUpazila('');
+                  fetchDistricts(e.target.value);
+                }}
+                className="glass-input block w-full pl-9 pr-3 py-2 text-sm"
+                required
+              >
+                <option value="" className="bg-slate-800 text-slate-400">Select Division</option>
+                {divisions.map((d) => (
+                  <option key={d} value={d} className="bg-slate-800">{d}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
               District Region
@@ -78,8 +112,9 @@ export function PredictionForm({ onPredict }: PredictionFormProps) {
                   setSelectedUpazila('');
                   fetchUpazilas(e.target.value);
                 }}
-                className="glass-input block w-full pl-9 pr-3 py-2 text-sm"
+                className="glass-input block w-full pl-9 pr-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 required
+                disabled={!selectedDivision}
               >
                 <option value="" className="bg-slate-800 text-slate-400">Select District Grid</option>
                 {districts.map((d) => (

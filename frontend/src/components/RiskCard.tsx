@@ -5,9 +5,10 @@ import { ShieldAlert, ShieldCheck, Shield } from 'lucide-react';
 interface RiskCardProps {
   riskLevel: string;
   predictionTime: string;
+  intervalHours: number;
 }
 
-export function RiskCard({ riskLevel, predictionTime }: RiskCardProps) {
+export function RiskCard({ riskLevel, predictionTime, intervalHours }: RiskCardProps) {
   const getRiskStyles = () => {
     switch (riskLevel) {
       case 'Low': 
@@ -50,7 +51,7 @@ export function RiskCard({ riskLevel, predictionTime }: RiskCardProps) {
   return (
     <div className={`glass-panel p-4 flex flex-col items-center justify-center text-center h-full border ${styles.border} ${styles.glow} transition-all duration-500`}>
       <h2 className="text-lg font-semibold text-slate-400 uppercase tracking-widest mb-1">Grid Status</h2>
-      <p className="text-[15px] text-slate-500 mb-3 font-mono">T+4H: {predictionTime}</p>
+      <p className="text-[15px] text-slate-500 mb-3 font-mono">T+{intervalHours}H: {predictionTime}</p>
       
       <div className={`mb-3 p-3 rounded-full ${styles.bg}`}>
         {styles.icon}

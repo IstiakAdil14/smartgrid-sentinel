@@ -1,14 +1,36 @@
-from fastapi import FastAPI
+import sympy
+import sympy.core
+import torch
+import torch.nn as nn
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-import pandas as pd
-import numpy as np
-import joblib
 from datetime import datetime, timedelta
-from tensorflow.keras.models import load_model
 import urllib.request
 import json
+import os
+
+from preprocessing import preprocessor
+from nlp import generate_explanation, generate_recommendations
+
+# Define the model architecture exactly as used in training
+class Informer(nn.Module):
+    def __init__(self, c_in, c_out, seq_len):
+        super().__init__()
+        self.proj = nn.Linear(c_in, 64)
+        self.attn = nn.MultiheadAttention(embed_dim=64, num_heads=4, batch_first=True)
+        self.fc1 = nn.Linear(64 * seq_len, 128)
+        self.dropout = nn.Dropout(0.2)
+        self.fc2 = nn.Linear(128, c_out)
+        
+    def forward(self, x):
+        x = self.proj(x)
+        x, _ = self.attn(x, x, x)
+        x = x.reshape(x.size(0), -1)
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)
+        return self.fc2(x)
 
 app = FastAPI(title="SmartGrid Risk Prediction API")
 
@@ -21,111 +43,96 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load models and data
-model = load_model("../models/lstm_model.keras")
-scaler = joblib.load("../models/scaler.pkl")
-target_encoder = joblib.load("../models/target_encoder.pkl")
-grid_assets = pd.read_csv("../dataset/grid_assets.csv")
+# Initialize and load Informer model
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHECKPOINT_PATH = os.path.join(BASE_DIR, "models", "checkpoints", "Informer", "epoch_10.pth")
 
-# Mappings
-weather_map = {"Sunny": 0, "Cloudy": 1, "Rainy": 2, "Stormy": 2}
-area_map = {"Urban": 0, "Rural": 1}
-maintenance_map = {"No": 0, "Yes": 1}
-district_map = {"Sylhet": 0, "Habiganj": 1, "Moulvibazar": 2, "Sunamganj": 3}
-upazila_map = {
-    "Balaganj": 0, "Beanibazar": 1, "Bishwanath": 2, "Companiganj": 3,
-    "Dakshin Surma": 4, "Fenchuganj": 5, "Golapganj": 6, "Gowainghat": 7,
-    "Jaintiapur": 8, "Kanaighat": 9, "Osmani Nagar": 10, "Sylhet Sadar": 11,
-    "Zakiganj": 12, "Ajmiriganj": 13, "Bahubal": 14, "Baniachang": 15, 
-    "Chunarughat": 16, "Habiganj Sadar": 17, "Lakhai": 18, "Madhabpur": 19, 
-    "Nabiganj": 20, "Shaistaganj": 21, "Barlekha": 22, "Juri": 23, 
-    "Kamalganj": 24, "Kulaura": 25, "Moulvibazar Sadar": 26, "Rajnagar": 27, 
-    "Sreemangal": 28, "Bishwamvarpur": 29, "Chhatak": 30, "Dakshin Sunamganj": 31, 
-    "Derai": 32, "Dharmapasha": 33, "Dowarabazar": 34, "Jagannathpur": 35, 
-    "Jamalganj": 36, "Sullah": 37, "Sunamganj Sadar": 38, "Tahirpur": 39, 
-    "Shantiganj": 40
-}
+num_features = len(preprocessor.feature_order)
+num_classes = len(preprocessor.target_encoder.classes_)
+seq_len = 5
 
+model = Informer(c_in=num_features, c_out=num_classes, seq_len=seq_len)
+model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location='cpu', weights_only=True))
+model.eval()
+
+# District coordinates for live weather (display only)
 district_coords = {
     "Sylhet": {"lat": 24.8949, "lon": 91.8687},
     "Habiganj": {"lat": 24.3840, "lon": 91.4169},
     "Moulvibazar": {"lat": 24.4842, "lon": 91.7685},
-    "Sunamganj": {"lat": 25.0664, "lon": 91.4074}
+    "Sunamganj": {"lat": 25.0664, "lon": 91.4074},
+    "Cox's Bazar": {"lat": 21.4272, "lon": 92.0058},
+    "Chattogram": {"lat": 22.3569, "lon": 91.7832},
+    "Rangamati": {"lat": 22.6533, "lon": 92.1525},
+    "Chandpur": {"lat": 23.2333, "lon": 90.6667},
+    "Noakhali": {"lat": 22.8696, "lon": 91.0993},
+    "Bandarban": {"lat": 22.1953, "lon": 92.2184},
+    "Cumilla": {"lat": 23.4683, "lon": 91.1799},
+    "Lakshmipur": {"lat": 22.9425, "lon": 90.8412},
+    "Khagrachhari": {"lat": 23.1193, "lon": 91.9847},
+    "Brahmanbaria": {"lat": 23.9571, "lon": 91.1119},
+    "Feni": {"lat": 23.0159, "lon": 91.3976}
 }
 
+division_districts = {
+    "Chattogram": [
+        "Cox's Bazar", "Chattogram", "Rangamati", "Chandpur", 
+        "Noakhali", "Bandarban", "Cumilla", "Lakshmipur", 
+        "Khagrachhari", "Brahmanbaria", "Feni"
+    ],
+    "Sylhet": [
+        "Habiganj", "Sylhet", "Moulvibazar", "Sunamganj"
+    ]
+}
 
 class PredictionRequest(BaseModel):
     district: str
     upazila: str
-
 
 class PredictionResponse(BaseModel):
     risk_level: str
     confidence: dict
     weather: dict
     prediction_time: str
+    forecast_horizon_hours: int
+    history_observations: int
+    history_duration_hours: int
+    evidence: dict
+    explanation: str
     recommendation: List[str]
 
+@app.get("/divisions")
+def get_divisions():
+    """Get list of available divisions."""
+    return list(division_districts.keys())
 
-@app.get("/districts")
-def get_districts():
-    """Get list of available districts."""
-    districts = grid_assets["district"].unique().tolist()
-    return districts
-
+@app.get("/districts/{division}")
+def get_districts(division: str):
+    """Get list of available districts for a division."""
+    if division not in division_districts:
+        return []
+    return sorted(division_districts[division])
 
 @app.get("/upazilas/{district}")
 def get_upazilas(district: str):
     """Get upazilas for a given district."""
-    upazilas = grid_assets[grid_assets["district"] == district]["upazila"].unique().tolist()
+    upazilas = preprocessor.df[preprocessor.df["district"] == district]["upazila"].unique().tolist()
     return upazilas
-
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict_risk(request: PredictionRequest):
-    """Predict risk level for the next 4 hours using Live Weather and LSTM."""
+    """Predict risk level for the next 2 hours using Historical Data and Informer Model."""
     
-    # 1. Fetch grid asset data
-    asset = grid_assets[
-        (grid_assets["district"] == request.district) & 
-        (grid_assets["upazila"] == request.upazila)
-    ].iloc[0]
-    
-    # 2. Get prediction time (+4 Hours)
-    now = datetime.now()
-    pred_time = now + timedelta(hours=4)
-    hour = pred_time.hour
-    weekday = pred_time.weekday()
-    
-    # Determine the time period for grid loads
-    if 6 <= hour < 12:
-        period = "morning"
-    elif 12 <= hour < 18:
-        period = "afternoon"
-    elif 18 <= hour < 22:
-        period = "evening"
-    else:
-        period = "night"
-        
-    electricity_demand = float(asset[f"demand_{period}"])
-    renewable_generation = float(asset[f"renewable_{period}"])
-    transformer_load = float(asset[f"transformer_load_{period}"])
-
-    # 3. Fetch Live Weather from Open-Meteo
-    base_coords = district_coords.get(request.district, district_coords["Sylhet"])
-    
-    # Generate deterministic geographic offset for the specific upazila
-    # This ensures each upazila queries a slightly different weather grid cell (~20km radius)
+    # 1. Fetch live weather strictly for DISPLAY on dashboard
+    base_coords = district_coords.get(request.district, {"lat": 24.8949, "lon": 91.8687})
     upazila_hash = sum(ord(c) for c in request.upazila)
     lat_offset = ((upazila_hash % 100) / 100.0) * 0.4 - 0.2
     lon_offset = (((upazila_hash * 3) % 100) / 100.0) * 0.4 - 0.2
-    
     target_lat = round(base_coords['lat'] + lat_offset, 4)
     target_lon = round(base_coords['lon'] + lon_offset, 4)
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={target_lat}&longitude={target_lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code"
     
-    api_error = None
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'SmartGrid/1.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
@@ -136,24 +143,9 @@ def predict_risk(request: PredictionRequest):
         rain = current_w['precipitation']
         wind = current_w['wind_speed_10m']
         w_code = current_w['weather_code']
+        cond_str = "Sunny" if w_code in [0, 1] else "Cloudy" if w_code in [2, 3, 45, 48] else "Stormy" if w_code in [95, 96, 99] else "Rainy"
     except Exception as e:
-        print(f"Weather API failed: {e}")
-        api_error = str(e)
-        # Fallback to sensible defaults
-        temp, hum, rain, wind, w_code = 30.0, 70.0, 0.0, 5.0, 0
-        
-    # Map WMO weather code to frontend condition
-    if w_code in [0, 1]:
-        cond_str = "Sunny"
-    elif w_code in [2, 3, 45, 48]:
-        cond_str = "Cloudy"
-    elif w_code in [95, 96, 99]:
-        cond_str = "Stormy"
-    else:
-        cond_str = "Rainy"
-
-    if api_error:
-        cond_str = f"API Error: {api_error[:15]}"
+        temp, hum, rain, wind, cond_str = 30.0, 70.0, 0.0, 5.0, "API Error"
 
     weather = {
         "temperature": temp,
@@ -163,71 +155,55 @@ def predict_risk(request: PredictionRequest):
         "condition": cond_str
     }
 
-    # 4. Process Categorical Encodings
-    substation_id = int(str(asset["substation_id"]).replace("SS_", ""))
-    feeder_id = int(str(asset["feeder_id"]).replace("FDR_", ""))
-    area_type = area_map.get(asset["area_type"], 0)
-    maintenance_due = maintenance_map.get(asset["maintenance_due"], 0)
-
-    # 5. Build Feature Vector
-    feature_dict = {
-        'hour': hour,
-        'weekday': weekday,
-        'temperature': temp,
-        'humidity': hum,
-        'rainfall': rain,
-        'wind_speed': wind,
-        'weather_state': weather_map.get(cond_str, 0),
-        'electricity_demand': electricity_demand,
-        'renewable_generation': renewable_generation,
-        'transformer_load': transformer_load,
-        'district': district_map.get(request.district, 0),
-        'upazila': upazila_map.get(request.upazila, 0),
-        'area_type': area_type,
-        'substation_id': substation_id,
-        'feeder_id': feeder_id,
-        'transformer_age': int(asset["transformer_age"]),
-        'transformer_capacity': float(asset["transformer_capacity"]),
-        'outage_history': int(asset["outage_history"]),
-        'maintenance_due': maintenance_due,
-        'population_density': float(asset["population_density"]),
-        'industrial_load_ratio': float(asset["industrial_load_ratio"])
-    }
-
-    feature_order = list(scaler.feature_names_in_)
-    X = pd.DataFrame([feature_dict])[feature_order]
-
-    # 6. Scale and Predict
-    X_scaled = scaler.transform(X)
-    
-    if model is not None:
-        # LSTM expects 3D input: (batch, timesteps, features)
-        X_lstm = X_scaled.reshape(1, 1, -1)
-        prob_array = model.predict(X_lstm, verbose=0)[0]
-        prediction_idx = int(np.argmax(prob_array))
-    else:
-        prob_array = [0.1, 0.7, 0.2]
-        prediction_idx = 1
+    # 2. Get Historical Sequence & Run Inference
+    try:
+        X_tensor, pred_time, interval_hours, history_df = preprocessor.get_historical_sequence(
+            request.district, request.upazila, live_weather=weather
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
         
-    risk_level = target_encoder.inverse_transform([prediction_idx])[0]
+    X_torch = torch.tensor(X_tensor, dtype=torch.float32)
     
-    # Map confidence back to classes (e.g. ['High', 'Low', 'Medium'])
+    with torch.no_grad():
+        out = model(X_torch)
+        probs = torch.softmax(out, dim=1).numpy()[0]
+        pred_idx = int(torch.argmax(out, dim=1).item())
+
+    # Map target encoded prediction to string
+    risk_level = preprocessor.target_encoder.inverse_transform([pred_idx])[0]
+    
     conf_dict = {}
-    for label, prob in zip(target_encoder.classes_, prob_array):
+    for label, prob in zip(preprocessor.target_encoder.classes_, probs):
         conf_dict[label] = float(prob)
-        
-    # 7. Generate Recommendations
-    if risk_level == "Low":
-        recs = ["✓ Grid operating normally.", "✓ No preventive action required."]
-    elif risk_level == "Medium":
-        recs = ["• Monitor transformer loading.", "• Reduce peak demand if possible.", "• Prepare standby generation."]
-    else:
-        recs = ["⚠ High overload risk detected.", "⚠ Dispatch maintenance team.", "⚠ Prepare load shedding plan.", "⚠ Increase reserve generation if available."]
+
+    # Extract Evidence from the latest observation (5th row)
+    latest_obs = history_df.iloc[-1]
+    evidence = {
+        "transformer_load": float(latest_obs.get("transformer_load", 0.0)),
+        "electricity_demand": float(latest_obs.get("electricity_demand", 0.0)),
+        "renewable_generation": float(latest_obs.get("renewable_generation", 0.0)),
+        "temperature": float(latest_obs.get("temperature", 0.0)),
+        "rainfall": float(latest_obs.get("rainfall", 0.0)),
+        "wind_speed": float(latest_obs.get("wind_speed", 0.0)),
+        "humidity": float(latest_obs.get("humidity", 0.0))
+    }
+    
+    # Generate Natural Language Explanation
+    explanation = generate_explanation(risk_level, evidence)
+
+    # 3. Generate Dynamic Action Protocols (Recommendations)
+    recs = generate_recommendations(risk_level, evidence)
 
     return {
         "risk_level": risk_level,
         "confidence": conf_dict,
         "weather": weather,
         "prediction_time": pred_time.strftime("%H:%M"),
+        "forecast_horizon_hours": interval_hours,
+        "history_observations": len(history_df),
+        "history_duration_hours": len(history_df) * 2,
+        "evidence": evidence,
+        "explanation": explanation,
         "recommendation": recs
     }

@@ -8,6 +8,8 @@ import { RiskCard } from '@/components/RiskCard';
 import { ProbabilityChart } from '@/components/ProbabilityChart';
 import { RecommendationCard } from '@/components/RecommendationCard';
 import { LoadingState } from '@/components/LoadingState';
+import { ExplanationCard } from '@/components/ExplanationCard';
+import { EvidenceGrid } from '@/components/EvidenceGrid';
 
 interface PredictionResult {
   risk_level: string;
@@ -24,23 +26,34 @@ interface PredictionResult {
     condition: string;
   };
   prediction_time: string;
+  forecast_horizon_hours: number;
+  explanation: string;
+  evidence: any;
   recommendation: string[];
 }
 
 export default function Home() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handlePredict = async (district: string, upazila: string) => {
     setLoading(true);
+    setErrorMessage(null);
+    setPrediction(null);
     try {
       const response = await axios.post('http://localhost:8000/predict', {
         district,
         upazila
       });
       setPrediction(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Prediction error:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        setErrorMessage(error.response.data.detail);
+      } else {
+        setErrorMessage("An unexpected error occurred while processing the telemetry data.");
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +74,8 @@ export default function Home() {
             SmartGrid Sentinel
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto font-light">
-            Advanced neural network telemetry predicting load shedding and grid instability for the next 4 hours.
+            <strong className="text-blue-300 font-semibold">Informer Risk Forecast</strong><br/>
+            Predicting the risk level approximately <strong className="font-semibold text-slate-300">{prediction ? prediction.forecast_horizon_hours : "2-4"} hours ahead</strong> using the latest <strong className="font-semibold text-slate-300">5 consecutive observations.</strong>
           </p>
         </div>
 
@@ -72,6 +86,13 @@ export default function Home() {
 
         {/* Loading State */}
         {loading && <LoadingState />}
+
+        {/* Error State */}
+        {errorMessage && !loading && (
+          <div className="max-w-3xl mx-auto mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-center animate-fade-in">
+            <p className="text-red-400 font-medium">⚠️ {errorMessage}</p>
+          </div>
+        )}
 
         {/* Results Dashboard */}
         {prediction && !loading && (
@@ -86,6 +107,7 @@ export default function Home() {
               <RiskCard 
                 riskLevel={prediction.risk_level} 
                 predictionTime={prediction.prediction_time}
+                intervalHours={prediction.forecast_horizon_hours}
               />
               <ProbabilityChart confidence={prediction.confidence} />
             </div>
@@ -93,6 +115,18 @@ export default function Home() {
             {/* Right Column (Recommendations) */}
             <div className="lg:col-span-1">
               <RecommendationCard recommendations={prediction.recommendation} />
+            </div>
+          </div>
+        )}
+
+        {/* NLP Explanation Section */}
+        {prediction && !loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 animate-fade-in" style={{animationDelay: '150ms'}}>
+            <div className="lg:col-span-1">
+              <ExplanationCard explanation={prediction.explanation} />
+            </div>
+            <div className="lg:col-span-1">
+              <EvidenceGrid evidence={prediction.evidence} />
             </div>
           </div>
         )}

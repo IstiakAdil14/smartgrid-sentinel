@@ -11,11 +11,9 @@ export function RecommendationCard({ recommendations }: RecommendationCardProps)
 
   return (
     <div className="glass-panel p-4 h-full flex flex-col">
-      <div className="flex items-center mb-4 pb-3 border-b border-slate-600/50">
-        <div className={`p-1.5 rounded-lg mr-2 shadow-sm ${isHighRisk ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'}`}>
-          {isHighRisk ? <AlertTriangle className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
-        </div>
-        <h2 className="text-xl font-medium text-slate-200">Action Protocols</h2>
+      <div className="flex items-center mb-4 border-b border-slate-600/50 pb-3">
+        <Zap className="text-blue-400 w-5 h-5 mr-2" />
+        <h2 className="text-lg font-medium text-slate-200 tracking-wide uppercase">User Suggestions</h2>
       </div>
       
       <div className="flex-grow flex flex-col justify-center">
