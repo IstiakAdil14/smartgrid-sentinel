@@ -29,7 +29,7 @@ smartgrid-sentinel/
 ├── frontend/         # Next.js 14 web application (React, TailwindCSS, Recharts)
 │   ├── src/          # Next.js app router pages and UI components
 │   └── package.json
-├── dataset/          # Static grid asset data and simulated telemetry
+├── datasetNew/       # Static grid asset data and simulated telemetry
 ├── models/           # Exported ML artifacts (Checkpoints, Scalers, Encoders)
 │   ├── checkpoints/  # Saved PyTorch training epochs
 │   └── best_model_info.json # Automated best-model selection artifact
