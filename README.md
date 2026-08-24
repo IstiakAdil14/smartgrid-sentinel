@@ -77,17 +77,18 @@ The Informer model analyzes a 5-step historical sequence containing 28 distinct 
 
 ## 🏆 Model Architectures & Performance Comparison
 
-During the data science lifecycle, we rigorously trained and evaluated **8 different advanced deep learning architectures** to determine the optimal model for 2-hour ahead sequential forecasting on our telemetry dataset. 
+During the data science lifecycle, we rigorously trained and evaluated **12 different machine learning architectures** (spanning Classical ML, Recurrent Neural Networks, and Transformers) to determine the optimal model for 2-hour ahead sequential risk forecasting.
 
 The models tested include:
-1. **Recurrent Networks:** LSTM, GRU, CNN-LSTM
-2. **Transformers:** Informer, Autoformer, PatchTST, TFT (Temporal Fusion Transformer)
-3. **Advanced Time-Series:** TimesNet
+1. **Classical ML:** Logistic Regression, Decision Tree, Random Forest, XGBoost
+2. **Recurrent Networks:** LSTM, GRU, CNN-LSTM
+3. **Transformers & Advanced Time-Series:** Informer, Autoformer, PatchTST, TFT, TimesNet
 
-**Key Findings:**
-- The **Informer** architecture drastically outperformed standard recurrent networks like LSTM and GRU in both accuracy (99.70%) and F1-Score (0.99) on our 5-step multivariate time-series sequences. 
-- Models like PatchTST and TimesNet were highly computationally expensive and achieved marginal returns or underperformed on our specific feature set.
-- Due to its optimized ProbSparse Self-Attention mechanism, the **Informer** was selected for production as it efficiently captures long-range dependencies while remaining lightweight enough for real-time API inference.
+**Key Findings & Analysis:**
+- **The Overfitting Trap:** While RNNs like GRU achieved slightly higher raw accuracy (~87.69%), epoch analysis revealed they suffered from severe overfitting—memorizing the training sequence while failing to generalize.
+- **The Classical Baseline:** Random Forest proved to be an exceptionally strong baseline, achieving the absolute highest Macro F1 Score (~77.87%) across all classes.
+- **Computational Cost:** Architectures like PatchTST and TimesNet were computationally expensive and offered diminishing returns on our specific feature set.
+- **The Production Winner:** The **Informer** was selected for production because it offered the perfect balance: it achieved the highest Weighted F1 Score (~88.44%), demonstrated highly stable training dynamics without severe overfitting, trained 3x faster than heavy transformers, and maintained strong recall for critical High-Risk grid failures.
 
 ---
 
