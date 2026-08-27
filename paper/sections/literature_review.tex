@@ -1,0 +1,22 @@
+\section{Literature Review}
+Load forecasting and grid stability modeling have traditionally relied on linear statistical methods, such as AutoRegressive Integrated Moving Average (ARIMA) models. While effective for stationary univariate series, these methods struggle to capture nonlinear interactions between weather features and grid utilization dynamics. The introduction of classical machine learning models (e.g., Random Forests and XGBoost) significantly improved forecasting performance by modeling high-dimensional tabular data. However, they discard the sequential temporal structures of grid load history.
+
+To address temporal dependencies, recurrent architectures—specifically Long Short-Term Memory (LSTM) \cite{c6} and Gated Recurrent Unit (GRU) \cite{c7} networks—have been widely adopted. These architectures maintain an internal cell state to track temporal transitions. Hybrid approaches, such as CNN-LSTM models \cite{c10}, use convolutional layers to extract spatial features followed by LSTM units to capture sequential dynamics.
+
+Recently, time-series Transformers have emerged as the state-of-the-art for sequence modeling. Architectures like the Informer \cite{c1} utilize self-attention mechanisms to resolve long-range dependencies efficiently, while PatchTST \cite{c3} processes sub-series patches to preserve local features. Despite these advancements, existing literature rarely addresses localized Upazila-level forecasting in high-variability grid environments, nor do they couple predictions with interpretable, rule-based natural language alerting systems.
+
+\begin{table}[htbp]
+\caption{Summary of Related Works and Proposed Work}
+\centering
+\begin{tabular}{lp{1.6cm}p{2.2cm}p{2.2cm}}
+\toprule
+\textbf{Study} & \textbf{Method} & \textbf{Dataset} & \textbf{Key Limitation} \\
+\midrule
+Rashid et al. \cite{c12} & LSTM & Smart Grid & No explainability layer \\
+Chen et al. \cite{c8} & XGBoost & Load Forecasting & No localized prediction \\
+Zhou et al. \cite{c1} & Informer & Energy Data & No alert system \\
+\textbf{Proposed} & \textbf{Informer + Rule} & \textbf{Bangladesh Grid} & \textbf{Limited to two divisions} \\
+\bottomrule
+\end{tabular}
+\label{tab:related}
+\end{table}

@@ -1,0 +1,12 @@
+\section{Conclusion and Future Work}
+\subsection{Conclusion}
+This paper presents SmartGrid Sentinel, a comparative forecasting framework for load shedding risk prediction. By employing strict chronological splitting, train-only scaling, and lookahead shifting, we ensure the framework is academically rigorous and leakage-free. The Informer model was selected for deployment due to its superior validation stability, minority-class recall (79.00\% on Medium-Risk), and higher Weighted F1 score (88.44\%). Ultimately, the integration of a rule-based natural language explainability layer improves the operational usability of the predictive model, paving the way for trustworthy decision support systems in modern smart grids.
+
+\subsection{Limitations}
+This study has several limitations. First, the dataset is restricted to two administrative divisions of Bangladesh and does not capture real-time SCADA measurements. Second, the forecasting horizon is limited to 2 hours ahead. Future deployments should evaluate longer forecasting horizons and wider geographic coverage to validate generalizability.
+
+\subsection{Threats to Validity}
+Potential threats to validity include synthetic feature engineering assumptions, regional data concentration, and limited forecasting horizon. Nevertheless, strict chronological evaluation and train-only scaling reduce methodological bias, ensuring the validity of our conclusions under deployment conditions.
+
+\subsection{Future Work}
+Future work will incorporate Graph Neural Networks (GNNs) to model electrical connectivity among substations and feeders, enabling topology-aware risk propagation forecasting across the power distribution network.

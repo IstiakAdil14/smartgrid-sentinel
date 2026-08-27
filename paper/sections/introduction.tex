@@ -1,0 +1,15 @@
+\section{Introduction}
+Modern smart grid infrastructures demand predictive rather than reactive load management to mitigate the frequency of blackouts and load-shedding events. In developing countries such as Bangladesh, sudden load imbalances caused by fluctuating demand patterns, adverse meteorological events, and aging substation equipment often require operators to initiate manual load shedding. Standard grid management paradigms are reactive, lacking the capability to forecast load-shedding risks sufficiently in advance for proactive scheduling.
+
+The primary objective of this work is to establish an academically rigorous and deployment-ready time-series forecasting framework that models localized load-shedding risks. We formulate a 2-hour ahead sequential forecasting model using historical telemetry windows. We evaluate twelve models, including classical ML (Logistic Regression, Decision Trees, Random Forests, XGBoost), recurrent networks (LSTM, GRU, CNN-LSTM), and advanced sequence Transformers (Autoformer, Informer, PatchTST, Temporal Fusion Transformer, and TimesNet).
+
+Furthermore, deep sequence models are often criticized as black-box systems, which hinders operational adoption. To address this, we construct a Rule-Based Explainability Layer that maps numerical predictions to natural language operational recommendations, bridging the gap between deep sequence forecasting and operator decision-making.
+
+\subsection{Key Contributions}
+The major contributions of this work are summarized as follows:
+\begin{enumerate}
+    \item Development of a localized load-shedding risk forecasting framework at the Upazila level for Bangladesh power grids.
+    \item Comparative evaluation of twelve machine learning, recurrent neural network, and transformer-based architectures under temporal leakage-free chronological validation.
+    \item Deployment-oriented selection and validation of the Informer model based on its predictive performance, training stability, and scalability.
+    \item Integration of a rule-based natural language alert explanation layer for practical operational interpretability.
+\end{enumerate}

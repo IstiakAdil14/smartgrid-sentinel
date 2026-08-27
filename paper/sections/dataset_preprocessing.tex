@@ -1,0 +1,53 @@
+\section{Dataset and Preprocessing}
+\subsection{Data Source and Characteristics}
+The dataset consists of 65,983 observations collected across 41 Upazilas within the Sylhet and Chattogram divisions of Bangladesh. The initial telemetry features contain 27 columns, detailing datetime stamps, weather parameters (temperature, humidity, rainfall, wind speed), and grid utilization metrics (electricity demand, renewable generation, transformer loading, and substation ID). Table I summarizes the dataset statistics.
+
+\begin{table}[htbp]
+\caption{Dataset Statistics Summary}
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Attribute} & \textbf{Value} \\
+\midrule
+Total Initial Records & 65,983 \\
+Post-Shifting Valid Records & 64,983 \\
+Number of Upazilas & 41 \\
+Feeder Channels & 1,000 \\
+Number of Features & 27 \\
+Observation Interval & 2 Hours \\
+Forecast Horizon & 2 Hours (1 Step) \\
+\bottomrule
+\end{tabular}
+\label{tab:stats}
+\end{table}
+
+\subsection{Feature Engineering}
+To capture domain-specific stress indicators, we engineered several variables:
+\begin{enumerate}
+    \item \textbf{Load Utilization Ratio ($U_{load}$):} Expresses the transformer load relative to capacity:
+    \begin{equation}
+    U_{load} = \frac{\text{Transformer Load}}{\text{Transformer Capacity} + 10^{-5}}
+    \end{equation}
+    \item \textbf{Demand Utilization Ratio ($U_{demand}$):}
+    \begin{equation}
+    U_{demand} = \frac{\text{Electricity Demand}}{\text{Transformer Capacity} + 10^{-5}}
+    \end{equation}
+    \item \textbf{Temperature-Humidity Index (THI):} Quantifies environmental heat stress affecting transformer efficiency:
+    \begin{equation}
+    \text{THI} = T + 0.55 \times (1 - H/100) \times (T - 14.5)
+    \end{equation}
+    where $T$ represents temperature in $^{\circ}$C and $H$ represents relative humidity (\%).
+    \item \textbf{Interactions and Peaks:} We added a wind-temperature interaction feature and binary indicator features for peak hours (18:00--22:00) and weekends.
+\end{enumerate}
+
+\subsection{Temporal Leakage Prevention and Scaling}
+To construct an academically defensible validation framework, we enforce the following data constraints:
+\begin{itemize}
+    \item \textbf{Future Target Shift:} The target label `risk\_level` is shifted by $-1$ observation (equivalent to a 2-hour look-ahead interval). All model inputs are strictly constrained to time step $t$ to predict the grid risk level at step $t+1$.
+    \item \textbf{Chronological Train-Test Split:} We group the sorted dataset by `substation\_id` and `feeder\_id`. For each feeder group, the first 80\% of the chronological sequence is assigned to the training split, and the subsequent 20\% is allocated to the test split. Shuffling is strictly disabled.
+    \item \textbf{Data Curation and Splitting Shapes:} The initial dataset of 65,983 observations is reduced by exactly 1,000 rows to 64,983 rows. This reduction occurs because shifting the risk level by $-1$ per feeder group to forecast the next time step creates 1,000 NaN values (corresponding to the final timestamp of each of the 1,000 distinct feeder channels), which are dropped. The remaining 64,983 rows are split chronologically into a training set of 51,587 samples (80\%) and a test set of 13,396 samples (20\%).
+    \item \textbf{Sequence Generation Omission:} During 3D sequence windowing of length 5 (sliding window of 5 steps, where each step represents a 2-hour telemetry interval, totaling a 10-hour historical lookback window), the first 4 observations of the test split for each of the 1,000 feeders cannot form a complete sequence and are omitted from sequence-based model evaluation. This results in exactly 10,027 sequence samples evaluated on the hold-out test set instead of the raw 13,396 test frames.
+    \item \textbf{Train-Only Scaling:} Feature scaling via `StandardScaler` is fitted solely on the training partition. The resulting parameters are then applied to scale the test partition, preventing out-of-sample data leakage.
+\end{itemize}
+
+Due to temporal dependencies in power system data, random train-test shuffling and K-fold cross-validation were intentionally avoided. Chronological evaluation better reflects real-world deployment where future observations are unavailable during training, thus mitigating optimistic bias.

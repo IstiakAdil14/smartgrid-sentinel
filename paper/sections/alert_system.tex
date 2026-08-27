@@ -1,0 +1,10 @@
+\section{Intelligent Alert System \& Rule-Based Explainability Layer}
+To support grid operations, predictions are passed to a Rule-Based Natural Language Explanation Module. Rather than utilizing uninterpretable feature attribution scores, the module evaluates the input telemetry against established grid capacity bounds:
+\begin{itemize}
+    \item \textbf{Overload Condition:} If predicted risk is High and $U_{load} > 0.85$, the module issues: ``Electricity demand exceeds safety load thresholds, indicating a severe transformer capacity overload.''
+    \item \textbf{Environmental stress:} If predicted risk is Medium or High and $\text{THI} > 28.0$, the module notes: ``Elevated environmental heat stress detected (THI: [value]), accelerating transformer thermal degradation risks.''
+\end{itemize}
+These descriptions are coupled with citizen-oriented recommendations (e.g., charging essential devices, throttling high-power appliances) to manage regional demand.
+
+\subsection{Practical Operational Impact}
+A two-hour advance warning allows grid operators to redistribute loads, schedule maintenance, and issue consumer advisories before severe instability occurs. By shifting peak demand proactively, utility operators can minimize grid stress and reduce the economic cost of unserved energy, moving the distribution system from reactive emergency load shedding to predictive contingency planning.

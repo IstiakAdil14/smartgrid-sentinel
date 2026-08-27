@@ -1,0 +1,20 @@
+\section{Experimental Setup}
+All models were implemented in Python. Neural networks were trained using PyTorch and TensorFlow/Keras on a workstation equipped with an NVIDIA RTX GPU. The sequence length was set to 5 historical observations (representing a 10-hour lookback window, where each step corresponds to a 2-hour telemetry interval). Training was executed for 50 epochs using the Adam optimizer with a learning rate of 0.0005 and a batch size of 32. Evaluation metrics include overall Accuracy, Macro Precision, Macro Recall, Macro F1, and Weighted F1.
+
+\begin{table}[htbp]
+\caption{Hyperparameter Configurations}
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Sequence Window Length & 5 \\
+Training Epochs & 50 \\
+Batch Size & 32 \\
+Learning Rate & 0.0005 \\
+Optimizer & Adam \\
+Loss Function & Sparse Categorical Crossentropy \\
+\bottomrule
+\end{tabular}
+\label{tab:hyper}
+\end{table}
