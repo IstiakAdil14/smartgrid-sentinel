@@ -1,0 +1,9 @@
+\section{Threats to Validity}
+\subsection{Internal Validity}
+Internal validity concerns potential experimental biases during data curation, feature engineering, or model training. We mitigated temporal data leakage by enforcing chronological train-test splits (80/20 per feeder stream) without random shuffling or K-fold cross-validation. Preprocessing parameters for feature scaling (\texttt{StandardScaler}) were computed strictly on the training partition. Furthermore, target shifting was performed per feeder stream prior to sequence generation.
+
+\subsection{External Validity}
+External validity addresses the generalizability of results across different distribution networks. The telemetry dataset spans 143 Upazilas across 15 districts in Sylhet and Chattogram divisions. While this provides diverse coverage across tropical coastal and hilly regions in Bangladesh, operational dynamics in other geographical regions or distribution utilities with different industrial load ratios may exhibit distinct demand profiles.
+
+\subsection{Construct Validity}
+Construct validity relates to whether evaluation metrics accurately capture real-world grid performance. We evaluated models across multiple complementary dimensions, including One-vs-Rest Macro F1, Weighted F1, Accuracy, Macro ROC-AUC, Macro PR-AUC, catastrophic High-to-Low missed alert counts, and training execution time, ensuring a holistic assessment.

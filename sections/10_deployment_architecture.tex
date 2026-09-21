@@ -1,0 +1,10 @@
+\section{Deployment Architecture}
+The production backend for SmartGrid Sentinel is implemented as a lightweight RESTful web service using FastAPI (\texttt{backend/app.py}). The API exposes endpoints for real-time telemetry ingestion, sequence window transformation, model inference, and rule-based alert generation.
+
+\begin{enumerate}
+    \item \textbf{Telemetry Ingestion \& Payload Parsing:} Incoming JSON requests containing historical 5-step telemetry arrays are validated against schemas specifying 27 raw input fields per timestamp.
+    \item \textbf{Sequence Scaling \& Inference:} The backend applies pre-fitted \texttt{StandardScaler} parameters to transform sequence arrays ($X \in \mathbb{R}^{1 \times 5 \times 28}$) before executing a forward pass on pre-trained checkpoint \texttt{epoch\_10.pth}.
+    \item \textbf{Softmax Probability Computation:} Output logits are converted to normalized Softmax probabilities ($\sum p_i = 1.0000$) to determine predicted risk levels.
+    \item \textbf{Rule Parser \& Advisory Ingestion:} Risk levels and physical telemetry parameters ($U_{\text{load}}$, $\text{THI}$) are processed through the rule engine to yield color-coded alert flags (\texttt{GREEN}, \texttt{YELLOW}, \texttt{RED}) and natural language action checklists.
+    \item \textbf{API Fault Tolerance \& Exception Handling:} Automated exception handlers catch malformed JSON payloads or unknown Upazila IDs, returning HTTP 400 (Bad Request) and HTTP 422 (Unprocessable Entity) status codes without process failure.
+\end{enumerate}

@@ -1,0 +1,31 @@
+[5]  B. Lim, S. O. Arik, N. Loeff, and T. Pfister, "Temporal fusion transformers for interpretable multi-horizon time series forecasting," International Journal of Forecasting, vol. 37, no. 4, pp. 1748-1764, 2021.
+
+[6]  S. Hochreiter and J. Schmidhuber, "Long short-term memory," Neural Computation, vol. 9, no. 8, pp. 1735-1780, 1997.
+
+[7]  K. Cho, B. van Merrienboer, C. Gulcehre, D. Bahdanau, F. Bougares, H. Schwenk, and Y. Bengio, "Learning phrase representations using RNN encoder-decoder for statistical machine translation," in Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, 2014, pp. 1724-1734.
+
+[8]  T. Chen and C. Guestrin, "XGBoost: A scalable tree boosting system," in Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016, pp. 785-794.
+
+[9]  L. Breiman, "Random forests," Machine Learning, vol. 45, no. 1, pp. 5-32, 2001.
+
+[10]  S. Xingjian, Z. Chen, H. Wang, D. Y. Yeung, W. K. Wong, and W. c. Woo, "Convolutional LSTM network: A machine learning approach for precipitation nowcasting," in Advances in Neural Information Processing Systems, 2015, pp. 802-810.
+
+[11]  M. R. I. Sheikh, M. S. Islam, and M. S. Rahman, "Power sector of Bangladesh: Present status and future challenges," in International Conference on Electrical, Computer and Communication Engineering, 2019, pp. 1-6.
+
+[12]  A. S. M. M. H. Rashid, M. A. A. Mahmud, and M. M. Rahman, "An automated load shedding management system using smart meters in smart grid," in International Conference on Informatics, Electronics & Vision, 2016, pp. 53-58.
+
+[13]  Y. Bengio, P. Simard, and P. Frasconi, "Learning long-term dependencies with gradient descent is difficult," IEEE Transactions on Neural Networks, vol. 5, no. 2, pp. 157-166, 1994.
+
+[14]  R. J. Hyndman and G. Athanasopoulos, Forecasting: principles and practice. OTexts, 2018.
+
+[15]  R. S. Michalski, "A theory and methodology of inductive learning," Machine Learning: An Artificial Intelligence Approach, vol. 1, pp. 83-134, 1983.
+
+[16]  Open-Meteo, "Open-meteo weather api," https://open-meteo.com, 2024.
+
+[17]  J. Chung, C. Gulcehre, K. Cho, and Y. Bengio, "Empirical evaluation of gated recurrent neural networks on sequence modeling," in NIPS Deep Learning Workshop, 2014.
+
+[18]  M. S. H. Lipu, M. A. Hannan, T. F. Karim, and A. Hussain, "Intelligent grid monitoring and load forecasting for Bangladesh power sector using machine learning," Energy Reports, vol. 9, pp. 240-252, 2023.
+
+[19]  A. Adadi and M. Berrada, "Peeking inside the black-box: A survey on Explainable Artificial Intelligence (XAI)," IEEE Access, vol. 6, pp. 52138-52160, 2018.
+
+[20]  G. Lai, W.-C. Chang, Y. Yang, and H. Liu, "Modeling long- and short-term temporal patterns with deep neural networks," in Proceedings of the 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 2018, pp. 95-104.

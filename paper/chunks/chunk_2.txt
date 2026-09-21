@@ -1,0 +1,30 @@
+    
+-  We design a localized load shedding risk forecasting pipeline configured at the Upazila level for regional grids in Bangladesh.
+    
+-  We perform a systematic benchmark of twelve machine learning, recurrent, and transformer architectures under a leakage-free, chronological evaluation split.
+    
+-  We justify and validate the Informer model for production deployment, considering its training stability, classification metrics, and computational efficiency.
+    
+-  We integrate a rule-based text explanation module to provide operational context for high-risk alerts.
+
+# Literature Review
+
+Standard grid load forecasting and stability models have historically used linear statistical approaches, such as AutoRegressive Integrated Moving Average (ARIMA). Although ARIMA models capture trends in stationary, single-variable series, they fail to model complex, non-linear relationships between meteorological changes and power demand dynamics. Classical machine learning classifiers, such as Random Forests and XGBoost, offer better performance by handling high-dimensional inputs. However, these tabular methods treat observations as independent, ignoring sequential patterns and temporal dependency.
+
+To capture sequential relationships, recurrent neural networks like Long Short-Term Memory (LSTM) [6] and Gated Recurrent Units (GRU) [7] are frequently applied. These networks use persistent hidden states to carry sequential information across timestamps. Additionally, hybrid architectures like CNN-LSTMs [10] combine 1D convolutional operations for spatial feature extraction with recurrent nodes for sequence forecasting.
+
+More recently, deep self-attention models have set new baselines in sequence modeling. The Informer [1] uses a ProbSparse self-attention mechanism to capture long-range dependencies with lower computational complexity, whereas PatchTST [3] breaks sequences into overlapping sub-series patches to preserve local correlations. However, current research seldom focuses on localized, Upazila-level load shedding forecasting, especially in areas with high grid instability, and rarely integrates machine learning predictions with rule-based text explanation layers.
+
+[Table: Summary of Related Works and Proposed Work]
+| Study | Method | Dataset | Key Limitation |
+| --- | --- | --- | --- |
+| Rashid et al. [12] | LSTM | Smart Grid | No explainability layer |
+| Chen et al. [8] | XGBoost | Load Forecasting | No localized prediction |
+| Zhou et al. [1] | Informer | Energy Data | No alert system |
+| Proposed | Informer + Rule | Bangladesh Grid | Limited to two divisions |
+
+# Dataset and Preprocessing
+
+## Data Source and Characteristics
+
+Our experimental telemetry data includes 65,983 records collected from 41 Upazilas in the Sylhet and Chattogram divisions of Bangladesh. The dataset contains 27 initial variables, which capture weather measurements (temperature, wind speed, rainfall, humidity), timestamp features, and operational grid parameters (substation identity, electrical demand, localized transformer load, and renewable supply). A summary of these statistics is presented in Table I.

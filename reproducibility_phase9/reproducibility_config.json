@@ -1,0 +1,129 @@
+{
+    "1. Dataset Version": {
+        "Dataset File": "datasetNew/mergeDataset.csv",
+        "Raw Records": 65983,
+        "Shifted Valid Sequence Records": 64983,
+        "Feeder Streams": 143,
+        "Districts": 15,
+        "Missing Values": 0,
+        "Duplicate Rows": 0
+    },
+    "2. Train/Validation/Test Split": {
+        "Split Strategy": "Chronological Sequence Split per Substation/Feeder Stream",
+        "Raw Data Split Ratio": "80% Train (train_df), 20% Test (test_df)",
+        "Train Sequence Windows": 42674,
+        "Validation Sequence Windows": 10545,
+        "Test Sequence Windows": 10027,
+        "Effective Percentage": "67% Train / 17% Validation / 16% Test"
+    },
+    "3. Random Seeds": {
+        "Global Seed": 42,
+        "Python random.seed": 42,
+        "NumPy np.random.seed": 42,
+        "PyTorch torch.manual_seed": 42,
+        "PyTorch CUDA torch.cuda.manual_seed_all": 42,
+        "TensorFlow tf.random.set_seed": 42,
+        "PyTorch Deterministic Flags": "cudnn.deterministic=True, cudnn.benchmark=False"
+    },
+    "4. Feature List (28 Total)": [
+        "hour",
+        "weekday",
+        "temperature",
+        "humidity",
+        "rainfall",
+        "wind_speed",
+        "weather_state",
+        "electricity_demand",
+        "renewable_generation",
+        "transformer_load",
+        "district",
+        "upazila",
+        "area_type",
+        "substation_id",
+        "feeder_id",
+        "transformer_age",
+        "transformer_capacity",
+        "outage_history",
+        "maintenance_due",
+        "population_density",
+        "industrial_load_ratio",
+        "load_utilization",
+        "demand_utilization",
+        "renewable_ratio",
+        "thi",
+        "wind_temp_interaction",
+        "is_peak_hour",
+        "is_weekend"
+    ],
+    "5. Scaling & Preprocessing": {
+        "Scaler Method": "StandardScaler (sklearn.preprocessing)",
+        "Scaler Fit Partition": "80% Chronological Training Partition Only",
+        "Categorical Encoding": "LabelEncoder (sklearn.preprocessing)",
+        "Target Encoder Classes": [
+            "High",
+            "Low",
+            "Medium"
+        ]
+    },
+    "6. Sequence & Window Length": {
+        "Observation Steps (TIME_STEPS / seq_len)": 5,
+        "Sampling Resolution": "2 Hours per observation step",
+        "Historical Lookback Window": "10 Hours (5 x 2h)"
+    },
+    "7. Forecast Horizon": {
+        "Prediction Target": "Grid Load-Shedding Risk Level at T + 2 Hours",
+        "Forecast Horizon": "2 Hours ahead"
+    },
+    "8. Model Architecture & Hyperparameters": {
+        "Primary Model": "Informer (Transformer Architecture)",
+        "Input Feature Channels (c_in)": 28,
+        "Output Risk Classes (c_out)": 3,
+        "Embedding Dimension (embed_dim)": 64,
+        "Attention Heads (num_heads)": 4,
+        "Attention Type": "Multi-Head Self-Attention (batch_first=True)",
+        "Fully Connected Layer": "Linear(64 * 5 = 320 -> 128)",
+        "Dropout Rate": 0.2,
+        "Activation Function": "ReLU",
+        "Random Forest Hyperparameters": "n_estimators=100, max_depth=None, criterion=gini, seed=42",
+        "XGBoost Hyperparameters": "n_estimators=100, max_depth=6, learning_rate=0.1, objective=multi:softprob, seed=42"
+    },
+    "9. Batch Size": {
+        "Training Batch Size": 64,
+        "Validation Batch Size": 512,
+        "Test Batch Size": 64
+    },
+    "10. Number of Epochs & Checkpointing": {
+        "Total Training Epochs": 50,
+        "Checkpoint Interval": "Every 10 Epochs (10, 20, 30, 40, 50)",
+        "Deployed Checkpoint": "epoch_10.pth"
+    },
+    "11. Learning Rate & Optimizer": {
+        "Initial Learning Rate": 0.001,
+        "Optimizer": "Adam (optim.Adam)",
+        "Adam Parameters": "betas=(0.9, 0.999), eps=1e-8, weight_decay=0",
+        "Loss Function": "nn.CrossEntropyLoss()"
+    },
+    "12. Early Stopping Criteria": {
+        "Monitored Metric": "Validation Loss (val_loss)",
+        "Patience": 10,
+        "Min Delta": 0.0,
+        "Best State Recovery": "Restores model state dictionary at minimum validation loss"
+    },
+    "13. Hardware Configuration": {
+        "OS Platform": "Windows-11-10.0.26200-SP0",
+        "Processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+        "Physical CPU Cores": 6,
+        "Logical CPU Cores": 12,
+        "Total System RAM": "7.34 GB",
+        "CUDA Accelerator": "Supported (Trained / Evaluated on CPU / CUDA)"
+    },
+    "14. Software & Library Versions": {
+        "Python": "3.13.12",
+        "PyTorch": "2.13.0+cpu",
+        "Scikit-Learn": "1.7.2",
+        "XGBoost": "3.2.0",
+        "Pandas": "3.0.3",
+        "NumPy": "2.4.6",
+        "Joblib": "1.5.3"
+    }
+}

@@ -1,0 +1,69 @@
+Category,Parameter,Value
+1. Dataset Version,Dataset File,datasetNew/mergeDataset.csv
+1. Dataset Version,Raw Records,65983
+1. Dataset Version,Shifted Valid Sequence Records,64983
+1. Dataset Version,Feeder Streams,143
+1. Dataset Version,Districts,15
+1. Dataset Version,Missing Values,0
+1. Dataset Version,Duplicate Rows,0
+2. Train/Validation/Test Split,Split Strategy,Chronological Sequence Split per Substation/Feeder Stream
+2. Train/Validation/Test Split,Raw Data Split Ratio,"80% Train (train_df), 20% Test (test_df)"
+2. Train/Validation/Test Split,Train Sequence Windows,42674
+2. Train/Validation/Test Split,Validation Sequence Windows,10545
+2. Train/Validation/Test Split,Test Sequence Windows,10027
+2. Train/Validation/Test Split,Effective Percentage,67% Train / 17% Validation / 16% Test
+3. Random Seeds,Global Seed,42
+3. Random Seeds,Python random.seed,42
+3. Random Seeds,NumPy np.random.seed,42
+3. Random Seeds,PyTorch torch.manual_seed,42
+3. Random Seeds,PyTorch CUDA torch.cuda.manual_seed_all,42
+3. Random Seeds,TensorFlow tf.random.set_seed,42
+3. Random Seeds,PyTorch Deterministic Flags,"cudnn.deterministic=True, cudnn.benchmark=False"
+4. Feature List (28 Total),Feature List,"hour, weekday, temperature, humidity, rainfall, wind_speed, weather_state, electricity_demand, renewable_generation, transformer_load, district, upazila, area_type, substation_id, feeder_id, transformer_age, transformer_capacity, outage_history, maintenance_due, population_density, industrial_load_ratio, load_utilization, demand_utilization, renewable_ratio, thi, wind_temp_interaction, is_peak_hour, is_weekend"
+5. Scaling & Preprocessing,Scaler Method,StandardScaler (sklearn.preprocessing)
+5. Scaling & Preprocessing,Scaler Fit Partition,80% Chronological Training Partition Only
+5. Scaling & Preprocessing,Categorical Encoding,LabelEncoder (sklearn.preprocessing)
+5. Scaling & Preprocessing,Target Encoder Classes,"['High', 'Low', 'Medium']"
+6. Sequence & Window Length,Observation Steps (TIME_STEPS / seq_len),5
+6. Sequence & Window Length,Sampling Resolution,2 Hours per observation step
+6. Sequence & Window Length,Historical Lookback Window,10 Hours (5 x 2h)
+7. Forecast Horizon,Prediction Target,Grid Load-Shedding Risk Level at T + 2 Hours
+7. Forecast Horizon,Forecast Horizon,2 Hours ahead
+8. Model Architecture & Hyperparameters,Primary Model,Informer (Transformer Architecture)
+8. Model Architecture & Hyperparameters,Input Feature Channels (c_in),28
+8. Model Architecture & Hyperparameters,Output Risk Classes (c_out),3
+8. Model Architecture & Hyperparameters,Embedding Dimension (embed_dim),64
+8. Model Architecture & Hyperparameters,Attention Heads (num_heads),4
+8. Model Architecture & Hyperparameters,Attention Type,Multi-Head Self-Attention (batch_first=True)
+8. Model Architecture & Hyperparameters,Fully Connected Layer,Linear(64 * 5 = 320 -> 128)
+8. Model Architecture & Hyperparameters,Dropout Rate,0.2
+8. Model Architecture & Hyperparameters,Activation Function,ReLU
+8. Model Architecture & Hyperparameters,Random Forest Hyperparameters,"n_estimators=100, max_depth=None, criterion=gini, seed=42"
+8. Model Architecture & Hyperparameters,XGBoost Hyperparameters,"n_estimators=100, max_depth=6, learning_rate=0.1, objective=multi:softprob, seed=42"
+9. Batch Size,Training Batch Size,64
+9. Batch Size,Validation Batch Size,512
+9. Batch Size,Test Batch Size,64
+10. Number of Epochs & Checkpointing,Total Training Epochs,50
+10. Number of Epochs & Checkpointing,Checkpoint Interval,"Every 10 Epochs (10, 20, 30, 40, 50)"
+10. Number of Epochs & Checkpointing,Deployed Checkpoint,epoch_10.pth
+11. Learning Rate & Optimizer,Initial Learning Rate,0.001
+11. Learning Rate & Optimizer,Optimizer,Adam (optim.Adam)
+11. Learning Rate & Optimizer,Adam Parameters,"betas=(0.9, 0.999), eps=1e-8, weight_decay=0"
+11. Learning Rate & Optimizer,Loss Function,nn.CrossEntropyLoss()
+12. Early Stopping Criteria,Monitored Metric,Validation Loss (val_loss)
+12. Early Stopping Criteria,Patience,10
+12. Early Stopping Criteria,Min Delta,0.0
+12. Early Stopping Criteria,Best State Recovery,Restores model state dictionary at minimum validation loss
+13. Hardware Configuration,OS Platform,Windows-11-10.0.26200-SP0
+13. Hardware Configuration,Processor,"AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+13. Hardware Configuration,Physical CPU Cores,6
+13. Hardware Configuration,Logical CPU Cores,12
+13. Hardware Configuration,Total System RAM,7.34 GB
+13. Hardware Configuration,CUDA Accelerator,Supported (Trained / Evaluated on CPU / CUDA)
+14. Software & Library Versions,Python,3.13.12
+14. Software & Library Versions,PyTorch,2.13.0+cpu
+14. Software & Library Versions,Scikit-Learn,1.7.2
+14. Software & Library Versions,XGBoost,3.2.0
+14. Software & Library Versions,Pandas,3.0.3
+14. Software & Library Versions,NumPy,2.4.6
+14. Software & Library Versions,Joblib,1.5.3

@@ -1,0 +1,13 @@
+Model,True High -> Pred High (Correct),True High -> Pred Medium (Dangerous),True High -> Pred Low (Catastrophic),Total High Missed,True Medium -> Pred Low,True Medium -> Pred High,True Low -> Pred Medium,True Low -> Pred High,Total Misclassifications
+XGBoost,924,250,128,378,343,85,399,40,1245
+Informer,915,337,50,387,160,75,620,20,1262
+GRU,910,311,81,392,242,60,520,20,1234
+Logistic Regression,909,344,49,393,176,55,699,22,1345
+Random Forest,908,322,72,394,193,47,613,18,1265
+TFT,904,325,73,398,181,51,917,19,1566
+LSTM,903,310,89,399,215,46,640,19,1319
+PatchTST,899,346,57,403,148,35,839,10,1435
+Autoformer,899,339,64,403,165,45,817,19,1449
+CNN-LSTM,897,332,73,405,201,46,616,19,1287
+TimesNet,894,351,57,408,151,45,680,16,1300
+Decision Tree,893,345,64,409,175,43,732,15,1374

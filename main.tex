@@ -1,0 +1,52 @@
+\documentclass[journal]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\makeatletter
+\def\abstractname{Abstract:}
+\def\IEEEkeywordsname{Index Terms:}
+\makeatother
+\begin{document}
+
+\title{SmartGrid Sentinel: A Comparative Time-Series Forecasting Framework for Load Shedding Risk Prediction and Intelligent Alert Generation in Bangladesh}
+
+\author{Istiak Adil, Hussain, and DeepMind Research Team}
+
+\maketitle
+
+\begin{abstract}
+\normalfont
+Sudden power outages frequently disrupt regional electricity distribution networks during peak demand hours. To provide grid dispatchers with actionable early warnings, we developed SmartGrid Sentinel, an intelligent risk forecasting framework that predicts load-shedding severity 2 hours in advance for individual Upazilas. Evaluated across 65,983 telemetry snapshots collected from 143 Upazilas across 15 districts in Bangladesh (1,000 distinct feeder streams), we benchmarked 12 machine learning, recurrent neural network, and temporal Transformer architectures. Evaluating on 10,027 test sequence windows using a leakage-free chronological split, the Informer sequence model achieved an overall accuracy of 87.41\%, a Macro F1-score of 77.68\%, and a Weighted F1-score of 88.44\%, capturing 78.92\% of High-Risk events (880/1,115) and 91.59\% of Medium-Risk events (6,970/7,610), while limiting catastrophic High-to-Low missed alerts to 50 cases (4.48\%). Paired statistical testing (McNemar and Wilcoxon tests, $\alpha = 0.05$) indicates that overall accuracy differences between Informer and top-performing models (GRU, XGBoost, Random Forest) are not statistically significant ($p \ge 0.05$). Informer was retained for primary deployment based on its observed benchmark performance, low catastrophic error count, training loss stability, and $O(L \log L)$ computational efficiency (training 3x faster than TFT and PatchTST). Controlled feature ablation confirmed that domain utilization indicators drive predictive performance (-1.56\% Macro F1 drop when removed). Robustness evaluations across diurnal cycles (87.29\% Peak vs 87.45\% Off-Peak accuracy) and seasonal regimes revealed lower High-Risk recall during Summer (61.71\%) due to heatwave volatility compared to Monsoon (91.30\%) and Winter (98.09\%). An integrated physical rule engine maps model probabilities to human-readable operator advisories and consumer checklists.
+\end{abstract}
+
+\begin{IEEEkeywords}
+\normalfont
+Smart Grid, Load Shedding Forecasting, Informer, Time-Series Prediction, Feature Ablation, Statistical Validation, Power Systems, Machine Learning.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction.tex}
+\input{sections/02_literature_review.tex}
+\input{sections/03_dataset_description.tex}
+\input{sections/04_data_preprocessing.tex}
+\input{sections/05_feature_engineering.tex}
+\input{sections/06_proposed_methodology.tex}
+\input{sections/07_experimental_setup.tex}
+\input{sections/08_results_and_analysis.tex}
+\input{sections/09_explainability_alert_generation.tex}
+\input{sections/10_deployment_architecture.tex}
+\input{sections/11_discussion.tex}
+\input{sections/12_threats_to_validity.tex}
+\input{sections/13_limitations.tex}
+\input{sections/14_conclusion_future_work.tex}
+
+\clearpage
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

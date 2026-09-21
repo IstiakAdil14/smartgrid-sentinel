@@ -1,0 +1,37 @@
+We selected the Informer model for production deployment over the GRU network, despite the latter's slightly higher raw accuracy (87.69% vs. 87.41%). The GRU model exhibited severe overfitting after 20 epochs, as evidenced by a diverging validation loss. In contrast, the Informer model converged stably across all 50 epochs (refer to Fig. 2). Furthermore, the Informer achieved a higher Weighted F1-score (88.44% compared to 88.39% for the GRU) and showed better predictive capability on the minority Medium-Risk class, reaching 79.00% recall compared to the GRU's 73.00%.
+
+[Figure: Informer vs. GRU Training and Validation Loss Curves.]
+
+Although the Random Forest model achieved a marginally higher Macro F1-score than the Informer (77.87% versus 77.68%, a difference of 0.19%), it remains unsuitable for actual grid deployment. Standard ensemble classifiers cannot capture sequential temporal dependencies or handle multi-step forecasting horizons without complex engineering. The Informer natively models chronological sequence dynamics through self-attention, making it much better suited for scale and multi-node grid expansions.
+
+## Training Time Complexity
+
+Computational training efficiency is critical for localized, real-time grid deployment. Table V details the total training execution time for the key deep architectures over 50 epochs.
+
+[Table: Training Time Comparison for Key Architectures]
+| Model | Total Training Time (50 Epochs) |
+| --- | --- |
+| Informer | 111.20 seconds |
+| GRU | 149.85 seconds |
+| LSTM | 168.27 seconds |
+| TimesNet | 318.47 seconds |
+| TFT | 332.51 seconds |
+| PatchTST | 357.63 seconds |
+
+The metrics indicate that the Informer trains highly efficiently. It executes approximately 3 times faster than PatchTST and Temporal Fusion Transformer (TFT) while maintaining strong predictive performance.
+
+## Error Analysis and Confusion Matrix
+
+We analyze the specific classification patterns of the deployed Informer model using its confusion matrix. Evaluated on the chronological test partition (10,027 samples), the confusion matrix is plotted in Fig. 3 and expressed mathematically below:
+
+Equation: C = [ 915   50   337 ; 20   6970   620 ; 75   160   880 ]
+
+Here, rows and columns represent the True and Predicted risk categories respectively, ordered as [High, Low, Medium].
+
+[Figure: Confusion Matrix for the PyTorch Informer Model.]
+
+The Informer model correctly predicts 915 High-Risk, 6,970 Low-Risk, and 880 Medium-Risk test windows. Most classification errors occur between adjacent categories (such as classifying 337 High-Risk cases as Medium, or 620 Low-Risk cases as Medium). This is expected given that the underlying grid load and temperature transitions are continuous. More importantly, the model keeps critical false negatives very low, predicting High-Risk as Low-Risk in only 50 instances (3.84% of true High-Risk cases), which is essential for grid security and scheduling safety.
+
+# Intelligent Alert System & Rule-Based Explainability Layer
+
+To facilitate smart grid operations, our architecture routes Informer classification outputs directly to a rule-based explainability layer. Instead of generating abstract deep learning attribution weights, this module checks input metrics against physical substation operating boundaries:

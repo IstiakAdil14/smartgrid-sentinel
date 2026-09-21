@@ -1,0 +1,43 @@
+[Figure: System Architecture of SmartGrid Sentinel.]
+
+The core of our predictive pipeline is the Informer model. It uses multi-head self-attention to map historical input sequences $X_t-4:t$ to future load shedding risk categories $y_t+1$. The model's hidden layers pass the attention representations through standard feed-forward networks, and a final Softmax classifier produces a probability distribution over the three target categories: Low, Medium, and High Risk.
+
+A rule-based natural language layer interprets the output. Whenever the classifier predicts Medium or High Risk, the module evaluates the input variables against set thresholds (such as capacity overload boundaries or extreme THI values) to generate text explanations. This design provides immediate operational feedback without relying on complex deep-learning feature attribution maps.
+
+# Experimental Setup
+
+We implemented all forecasting models in Python. Deep learning networks were trained in PyTorch and TensorFlow/Keras on a local workstation utilizing an NVIDIA RTX graphics card. Each input sequence contains 5 historical steps (spanning 10 hours in total, with a 2-hour observation frequency). We trained the networks for 50 epochs using the Adam optimizer, setting the learning rate to 0.0005 and the batch size to 32. To evaluate performance, we measure classification Accuracy, Macro Precision, Macro Recall, Macro F1-score, and Weighted F1-score.
+
+[Table: Hyperparameter Configurations]
+| Parameter | Value |
+| --- | --- |
+| Sequence Window Length | 5 |
+| Training Epochs | 50 |
+| Batch Size | 32 |
+| Learning Rate | 0.0005 |
+| Optimizer | Adam |
+| Loss Function | Sparse Categorical Crossentropy |
+
+# Results and Discussion
+
+## Quantitative Analysis
+
+Table IV reports the quantitative evaluation metrics for all twelve models on the chronological test partition.
+
+[Table: Performance Comparison of All Models]
+| Model | Acc | Macro P | Macro R | Macro F1 | W. F1 |
+| --- | --- | --- | --- | --- | --- |
+| Informer | 87.41% | 78.52% | 80.26% | 77.68% | 88.44% |
+| GRU | 87.69% | 79.00% | 78.57% | 77.53% | 88.39% |
+| Random Forest | 87.38% | 79.33% | 79.97% | 77.87% | 88.34% |
+| TimesNet | 87.04% | 79.27% | 80.65% | 77.68% | 88.19% |
+| CNN-LSTM | 87.16% | 79.09% | 79.47% | 77.45% | 88.13% |
+| LSTM | 86.85% | 78.81% | 79.10% | 77.20% | 87.82% |
+| XGBoost | 87.58% | 77.78% | 75.60% | 76.23% | 87.81% |
+| Logistic Reg. | 86.59% | 78.30% | 79.87% | 77.05% | 87.80% |
+| Decision Tree | 86.30% | 78.66% | 79.74% | 76.88% | 87.56% |
+| PatchTST | 85.69% | 78.77% | 80.49% | 76.83% | 87.22% |
+| Autoformer | 85.55% | 78.00% | 79.74% | 76.36% | 87.01% |
+| TFT | 84.38% | 76.90% | 78.77% | 75.25% | 86.06% |
+
+## Informer Selection Justification

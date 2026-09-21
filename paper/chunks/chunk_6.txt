@@ -1,0 +1,38 @@
+    
+-  Overload Condition: When the predicted risk category is High and $U_load > 0.85$, the explanation module outputs: "Electricity demand exceeds safety load thresholds, indicating a severe transformer capacity overload."
+    
+-  Thermal Stress: When the predicted risk is Medium or High and $THI > 28.0$, the module states: "Elevated environmental heat stress detected (THI: [value]), accelerating transformer thermal degradation risks."
+
+We combine these technical alerts with consumer recommendations, such as suggestions to pre-charge essential items or delay operating high-wattage appliances, helping manage localized grid stress.
+
+## Practical Operational Impact
+
+Providing a reliable two-hour forecasting warning gives operators enough time to re-route loads, schedule critical maintenance, and notify consumers before outages occur. This transition from reactive load shedding to predictive contingency planning reduces the economic losses of unserved energy and stabilizes local distribution grids.
+
+# Conclusion and Future Work
+
+## Conclusion
+
+In this work, we developed and evaluated SmartGrid Sentinel, a sequential forecasting framework for load shedding risk prediction. By enforcing strict chronological validation, target shifting, and train-only scaling, we built an out-of-sample evaluation setup free of lookahead bias. The Informer model emerged as the most suitable architecture for grid deployment due to its stable training convergence, high minority-class recall (79.00% on Medium Risk), and superior Weighted F1-score (88.44%). Combining this sequence model with a rule-based explainability layer bridges the gap between deep neural network predictions and operator decision-making.
+
+## Limitations
+
+Our study has several limitations. First, the telemetry dataset focuses on two regional divisions in Bangladesh and does not represent real-time SCADA sensor streams. Second, our model is configured for a short-term, 2-hour ahead forecasting horizon. Future studies must test larger geographic areas and longer forecast steps to ensure spatial-temporal generalization.
+
+## Threats to Validity
+
+Threats to validity include regional data bias, simplified feature assumptions, and the short predictive horizon. However, the use of chronological validation splits and isolated scaling parameters minimizes optimistic bias, ensuring our conclusions remain valid under real-world conditions.
+
+## Future Work
+
+We plan to explore Graph Neural Networks (GNNs) to model physical grid topology and electrical connections among substations and feeders. This will allow the model to forecast cascading risk propagation across the wider transmission network.
+
+{00}
+
+[1]  H. Zhou, S. Zhang, J. Peng, S. Zhang, J. Li, H. Xiong, and W. Zhang, "Informer: Beyond efficient transformer for long sequence time-series forecasting," in Proceedings of the AAAI Conference on Artificial Intelligence, 2021, pp. 11106-11115.
+
+[2]  H. Wu, J. Xu, J. Wang, and M. Long, "Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting," in Advances in Neural Information Processing Systems, 2021, pp. 22419-22430.
+
+[3]  Y. Nie, N. H. Nguyen, P. Sinthong, and J. Kalagnanam, "A time series is worth 64 words: Long-term forecasting with transformers," in International Conference on Learning Representations, 2023.
+
+[4]  J. Wu, H. Wu, and M. Long, "TimesNet: Temporal 2D-variation modeling for general time series analysis," in International Conference on Learning Representations, 2023.

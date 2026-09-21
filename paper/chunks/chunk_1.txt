@@ -1,0 +1,40 @@
+SmartGrid Sentinel: Comparative Time-Series Forecasting for Load Shedding Risk Prediction and Intelligent Grid Alerts
+
+Md. Istiak Hussain Adil
+Department of Computer Science and Engineering 
+
+North East University Bangladesh
+
+Sylhet, Bangladesh 
+
+ID: 0562220005101053 | Session: Summer-2022 
+
+Email: istiak.adil@neub.edu.bd
+
+Razorshi Prozzwal Talukder
+Department of Computer Science and Engineering 
+
+North East University Bangladesh
+
+Sylhet, Bangladesh 
+
+Email: rptalukder@neub.edu.bd
+
+Course: Deep Learning (CSE-460)
+Bachelor of Science in Computer Science and Engineering
+
+Developing power grids frequently struggle with load shedding due to fragile infrastructures. In this paper, we introduce SmartGrid Sentinel, a forecasting framework designed to predict grid instability and localized load-shedding risks at the Upazila level. We train and evaluate twelve models, ranging from traditional machine learning methods to sequence-to-sequence neural networks and time-series Transformers, using a dataset of 65,983 telemetry records from 41 Upazilas in Sylhet and Chattogram, Bangladesh. To ensure realistic out-of-sample evaluation and prevent temporal leakage, we split the data chronologically (80/20) and fit scaling parameters exclusively on the training partition. Our findings show that the Informer architecture achieves a Weighted F1 score of 88.44% and a classification accuracy of 87.41%. While a standard Gated Recurrent Unit (GRU) achieves a slightly higher raw accuracy of 87.69%, it experiences severe validation loss divergence (overfitting) after 20 epochs. In contrast, the Informer shows stable training, handles class imbalance effectively (79.00% recall on the minority Medium-Risk class), and processes predictions rapidly. To make these predictions actionable, we implement a rule-based explainability module that translates high-risk classification outputs into clear operational protocols for grid operators and citizens.
+
+Smart Grid, Load Shedding Prediction, Time Series Forecasting, Informer, Transformer, Bangladesh.
+
+# Introduction
+
+Managing electrical load imbalances requires predictive rather than reactive strategies to prevent sudden outages and load shedding. In developing power grids like that of Bangladesh, operators regularly face load fluctuations driven by erratic demand, local weather changes, and deteriorating substation hardware. Existing distribution systems usually operate reactively, offering no early warnings to forecast local load shedding risk in advance for scheduling.
+
+In this work, we present a time-series forecasting pipeline to model localized load shedding risk for power distribution grids. We establish a 2-hour-ahead sequence prediction setup using 10-hour historical telemetry windows. Using this setup, we train and evaluate twelve models: traditional classifiers (Logistic Regression, Decision Trees, Random Forests, and XGBoost), recurrent neural networks (LSTMs, GRUs, and CNN-LSTMs), and time-series Transformers (Autoformer, Informer, PatchTST, Temporal Fusion Transformer, and TimesNet).
+
+Additionally, deep learning networks are often seen as black-box models, which makes grid operators hesitant to deploy them in practice. To overcome this limitation, we develop a rule-based explainability layer. This layer translates numerical risk predictions into natural language notifications, translating complex sequential predictions into actionable operational advice.
+
+## Key Contributions
+
+The main contributions of this paper are:

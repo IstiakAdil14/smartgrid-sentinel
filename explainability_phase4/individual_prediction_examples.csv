@@ -1,0 +1,4 @@
+Sample Index,True Class,Predicted Class,High Prob,Low Prob,Medium Prob,Risk Score,Transformer Load (%),Electricity Demand (MW),Temperature (°C),Humidity (%),Industrial Load Ratio,Hour,Is Peak Hour
+0,Low,Low,0.00%,100.00%,0.00%,,73.08,191.83,25.16,76.99,0.04,0.0,0.0
+91,Medium,Low,0.00%,99.99%,0.01%,,30.54,76.35,25.5,93.0,0.23,22.0,1.0
+200,High,Medium,25.89%,2.17%,71.94%,,70.59,174.64,24.92,79.47,0.17,8.0,0.0

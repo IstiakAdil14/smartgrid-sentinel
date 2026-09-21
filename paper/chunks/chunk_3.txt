@@ -1,0 +1,57 @@
+[Table: Dataset Statistics Summary]
+| Attribute | Value |
+| --- | --- |
+| Total Initial Records | 65,983 |
+| Post-Shifting Valid Records | 64,983 |
+| Number of Upazilas | 41 |
+| Feeder Channels | 1,000 |
+| Number of Features | 27 |
+| Observation Interval | 2 Hours |
+| Forecast Horizon | 2 Hours (1 Step) |
+
+## Feature Engineering
+
+We generated several domain-specific indicators to capture electrical and environmental stress on the local grid:
+
+    
+-  Load Utilization Ratio ($U_load$): This measures the current load on a transformer relative to its total capacity:
+    
+
+Equation: U_load = (Transformer Load / Transformer Capacity + 10^-5)
+
+    
+-  Demand Utilization Ratio ($U_demand$): This indicates total power demand scaled by the transformer's capacity limit:
+    
+
+Equation: U_demand = (Electricity Demand / Transformer Capacity + 10^-5)
+
+    
+-  Temperature-Humidity Index (THI): This metric assesses environmental heat stress, which degrades transformer capacity and operational efficiency:
+    
+
+Equation: THI = T + 0.55  (1 - H/100)  (T - 14.5)
+
+    where $T$ represents temperature in $^$C and $H$ represents relative humidity (%).
+    
+-  Interaction and Peak Features: We constructed an interaction term between temperature and wind speed, alongside binary flags representing weekend periods and daily peak load intervals (18:00-22:00).
+
+## Temporal Leakage Prevention and Scaling
+
+To build a rigorous and unbiased model validation framework, we apply the following processing constraints:
+
+    
+-  Target Shifting: To model a 2-hour-ahead forecasting horizon, we shift the target risk class ('risk_level') by $-1$ index. Predictions at time $t+1$ rely exclusively on inputs available at time $t$.
+    
+-  Temporal Partitioning: Data is sorted chronologically and grouped by 'substation_id' and 'feeder_id'. Within each feeder channel, the first 80% of observations form the training set, while the remaining 20% constitute the test set. Shuffling is disabled.
+    
+-  Data Alignment: Shifting the target label by $-1$ introduces a single trailing null value (NaN) for each of our 1,000 distinct feeder lines. Dropping these rows reduces our dataset size from 65,983 to 64,983 observations. The resulting clean dataset is partitioned chronologically into 51,587 training records (80%) and 13,396 test records (20%).
+    
+-  Sequence Padding and Truncation: Sequence-based models use a sliding window of length 5 (representing 10 hours of grid history). For each of the 1,000 feeders, the first 4 timestamps in the test partition cannot form a complete sequence. Omitting these incomplete windows leaves exactly 10,027 valid test sequences for evaluation.
+    
+-  Pipeline Isolation: We fit scaling parameters (using 'StandardScaler') solely on the training set. We then transform the test set using these pre-fitted parameters, avoiding lookahead leakage.
+
+We explicitly avoid random shuffling and K-fold cross-validation because of temporal dependencies in electrical time-series data. Evaluating models chronologically mimics real-world operations, where future inputs are unavailable, and prevents overoptimistic validation metrics.
+
+# Proposed Methodology
+
+We present the architecture of the SmartGrid Sentinel framework in Fig. 1, which works as a sequential forecasting pipeline.

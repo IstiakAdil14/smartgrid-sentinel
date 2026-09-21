@@ -1,0 +1,5 @@
+Comparison Pair,Both Correct (n00),Informer Only Correct (n01),GRU Only Correct (n10),Both Wrong (n11),McNemar Statistic,McNemar p-value,Wilcoxon p-value,Significance Status (alpha=0.05),XGBoost Only Correct (n10),Random Forest Only Correct (n10),TimesNet Only Correct (n10)
+Informer vs GRU,8631,134,162.0,1100,2.4628378378378377,0.11656800927080996,0.10363796401396239,Not Statistically Significant (p >= 0.05),,,
+Informer vs XGBoost,8522,243,,1002,0.5089463220675944,0.47559534126759584,0.44845545138103304,Not Statistically Significant (p >= 0.05),260.0,,
+Informer vs Random Forest,8647,118,,1147,0.017167381974248927,0.895756039864037,0.8441902397400837,Not Statistically Significant (p >= 0.05),,115.0,
+Informer vs TimesNet,8627,138,,1162,5.7521008403361344,0.016468950439788427,0.013771300850337077,Statistically Significant (p < 0.05),,,100.0

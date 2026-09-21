@@ -1,0 +1,24 @@
+\section{Feature Engineering}
+Raw telemetry attributes alone are insufficient to represent compound thermal and capacity stress on substation transformers. We engineered 7 domain-specific indicators, expanding the feature space from 27 raw variables to 28 model inputs:
+
+\begin{enumerate}
+    \item \textbf{Load Utilization Ratio ($U_{\text{load}}$):} Quantifies transformer loading relative to rated capacity:
+    \begin{equation}
+    U_{\text{load}} = \frac{\text{Transformer Load}}{\text{Transformer Capacity} + 10^{-5}}
+    \end{equation}
+    \item \textbf{Demand Utilization Ratio ($U_{\text{demand}}$):} Expresses aggregate electricity demand relative to transformer rating:
+    \begin{equation}
+    U_{\text{demand}} = \frac{\text{Electricity Demand}}{\text{Transformer Capacity} + 10^{-5}}
+    \end{equation}
+    \item \textbf{Renewable Generation Ratio ($R_{\text{ratio}}$):} Measures renewable generation contribution relative to local demand:
+    \begin{equation}
+    R_{\text{ratio}} = \frac{\text{Renewable Generation}}{\text{Electricity Demand} + 10^{-5}}
+    \end{equation}
+    \item \textbf{Temperature-Humidity Index ($\text{THI}$):} Evaluates environmental heat stress accelerating thermal insulation degradation:
+    \begin{equation}
+    \text{THI} = T + 0.55 \times (1 - H/100) \times (T - 14.5)
+    \end{equation}
+    where $T$ denotes ambient temperature ($^{\circ}\text{C}$) and $H$ denotes relative humidity (\%).
+    \item \textbf{Thermal-Wind Interaction:} Models convective cooling effects on exposed substation equipment via the product $T \times \text{Wind Speed}$.
+    \item \textbf{Temporal Flags:} Binary indicators \texttt{is\_peak\_hour} (18:00--22:00) and \texttt{is\_weekend} capture cyclical human consumption behaviors.
+\end{enumerate}

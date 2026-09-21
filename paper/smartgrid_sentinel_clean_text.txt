@@ -1,0 +1,135 @@
+Abstract: Sudden power outages frequently disrupt regional electricity distribution across Bangladesh during peak demand hours. To help substation engineers manage grid stress early, we developed SmartGrid Sentinel, a localized risk forecaster that predicts load shedding 2 hours in advance for individual Upazilas. We trained and evaluated models on 65,983 telemetry snapshots collected from 141 physical Upazilas across 15 districts in Sylhet and Chattogram. Keeping time order intact (80\% training data, 20\% test data), we benchmarked 12 algorithms ranging from basic machine learning to temporal Transformers. Informer delivered the strongest balance overall, reaching an 88.44\% Weighted F1-score and 87.41\% accuracy. A baseline GRU scored 87.69\% raw accuracy, but its validation loss began rising after epoch 20 due to overfitting. Informer trained smoothly, ran fast, and captured 79.00\% of hard-to-detect Medium-Risk events. To make predictions practical for dispatchers, we linked Informer with a physical rule engine that compares transformer loading and heat stress against hardware safety caps to issue plain-text emergency warnings.
+
+Index Terms: Smart Grid, Load Shedding Prediction, Time Series Forecasting, Informer, Transformer, Bangladesh.
+
+Introduction
+
+Power blackouts hit Bangladesh regional networks hard when afternoon heat climbs or industrial demand jumps without warning, overloading distribution transformers. Substation crews currently have no heads-up before circuit breakers trip.
+
+To fix this, we built a 2-hour early warning system for Upazila load shedding that looks back at 10 hours of telemetry. Using telemetry from 141 physical Upazilas, we tested 12 separate architectures: Logistic Regression, Decision Trees, Random Forests, XGBoost, LSTM, GRU, CNN-LSTM, Autoformer, Informer, PatchTST, Temporal Fusion Transformer, and TimesNet.
+
+Abstract probabilities alone don't help dispatchers cut the right feeder lines. If a model outputs an 85\% risk score, engineers still need clear physical reasons. We solved this by parsing live load ratios and heat stress values against hardware safety caps, spitting out direct text warnings.
+
+Key Contributions
+
+Our work makes four main practical contributions:
+
+- Localized Upazila Forecasting: A 2-hour early warning framework tailored to 141 physical Upazilas across eastern Bangladesh.
+
+- Leakage-Free Benchmark: A side-by-side comparison of 12 distinct algorithms evaluated strictly on historical time series splits.
+
+- Informer Deployment Proof: Experimental evidence proving Informer offers the best combination of accuracy, training speed, and numerical stability.
+
+- Rule-Based Explainability Integration: A physical threshold engine that converts raw probability scores into plain-text dispatcher warnings using hardware safety limits.
+
+Literature Review
+
+Linear tools like ARIMA backed utility load forecasts for decades. While ARIMA copes with smooth seasonal curves, sudden heatwaves or erratic industrial demand spikes cause it to fail. Non-linear tree ensembles—like Random Forests  and XGBoost —process tabular variables well, but they treat every timestamp as a standalone sample, ignoring continuous time trajectories.
+
+Recurrent neural networks solved sequence tracking. Architectures like LSTM  and GRU  use gated states to carry history forward. Hybrid setups like CNN-LSTM  extract short-term feature patterns via 1D convolutions before passing sequences to recurrent nodes.
+
+Transformers brought self-attention to time series. Informer  introduced ProbSparse self-attention to cut computational complexity down from quadratic levels to $O(L  L)$. PatchTST  splits continuous series into overlapping sub-series patches to preserve local temporal structures. Even with these modeling advances, existing studies rarely address localized Upazila load shedding in Bangladesh or pair neural forecasters with physical rule engines to generate plain-text operational advisories.
+
+Dataset and Preprocessing
+
+Data Source and Characteristics
+
+We compiled 65,983 telemetry logs recorded at 141 physical Upazilas (spanning 15 districts) across Sylhet and Chattogram. Every snapshot records 27 features, covering weather parameters (temperature, humidity, wind speed, rainfall), timestamp data, and substation measurements (feeder ID, demand, transformer load, solar/hydro generation). Table  shows the summary breakdown.
+
+Feature Engineering
+
+We built four domain variables to track electrical and thermal stress on transformers.
+
+Load Utilization Ratio ($U_load$) compares current load to rated transformer capacity:
+
+Demand Utilization Ratio ($U_demand$) compares power demand to transformer capacity:
+
+Temperature-Humidity Index (THI) tracks how heat and humidity reduce transformer cooling:
+
+where $T$ is temperature ($^$C) and $H$ is humidity (\%).
+
+We also added an interaction term between temperature and wind speed ($T  Wind Speed$) for cooling, plus binary flags for weekends and evening peak hours (18:00--22:00).
+
+Temporal Data Split and Scaling
+
+We locked down timestamp order to avoid lookahead leaks. Risk labels (`risk\_level`) were moved back by $-1$ step so that inputs at hour $t$ forecast grid risk at $t+1$ (2 hours ahead).
+
+We grouped rows by `substation\_id` and `feeder\_id`, then sorted every line chronologically. For each of the 1,000 feeder lines, the first 80\% of logs went to training and the remaining 20\% were saved for testing. We never shuffled data.
+
+Target shifting left one blank trailing row per feeder line. Removing these trailing rows trimmed total dataset size from 65,983 down to 64,983 logs (51,587 for training, 13,396 for testing).
+
+Because sequence models use a 5-step sliding window (10 hours of past history), the initial 4 timestamps of each test feeder could not form a full window without pulling from training data. Dropping those incomplete windows left 10,027 valid test sequences.
+
+We computed scaling stats (`StandardScaler` mean and variance) on training rows only, then applied those exact values to normalize test features.
+
+We avoided random splits and K-fold cross validation. Power grid readings correlate strongly over time. Shuffling timestamps feeds future information into past training rows, faking high accuracy.
+
+Proposed Methodology
+
+Fig.  illustrates how SmartGrid Sentinel processes temporal sequence windows to generate operational alerts.
+
+The Informer model serves as the core sequence forecaster in our pipeline. Using ProbSparse multi-head self-attention, it converts 5-step lookback matrices $X_t-4:t  R^5  d$ into target risk class probabilities $y_t+1  \Low, Medium, High\$. Attention outputs pass through dense layers and a Softmax output layer to assign probabilities for each risk level.
+
+When the classifier predicts Medium or High risk, probabilities pass directly to a physical rule checker. This engine tests live incoming numbers against hardware capacity caps ($U_load$) and heat thresholds ($THI$). Using direct hardware thresholds tells control room teams why an alert fired immediately, bypassing slow gradient calculations like SHAP.
+
+Experimental Setup
+
+We ran our pipeline in Python with PyTorch and TensorFlow/Keras on a local NVIDIA RTX workstation GPU. Inputs consist of 5 continuous 2-hour telemetry snapshots (10 hours of past context). Deep networks trained for 50 epochs using Adam ($learning rate = 0.0005$, $batch size = 32$). Table  details these hyperparameter choices. Models were benchmarked using Accuracy, Macro Precision, Macro Recall, Macro F1-score, and Weighted F1-score.
+
+Results and Discussion
+
+Quantitative Analysis
+
+Table  compares test metrics across all twelve candidate architectures evaluated on 10,027 test windows.
+
+Informer Selection Justification
+
+A standard GRU achieved a slightly higher raw classification accuracy than Informer (87.69\% vs. 87.41\%). However, inspecting loss trajectories reveals that GRU begins overfitting past epoch 20 as validation error increases. In contrast, Informer loss decreases steadily across all 50 training epochs (Fig. ). Informer also achieved a higher Weighted F1-score (88.44\% vs. 88.39\%) and identified minority Medium-Risk events more effectively, reaching 79.00\% recall compared to 73.00\% for GRU.
+
+Random Forest recorded a marginally higher Macro F1-score than Informer (77.87\% vs. 77.68\%, a 0.19\% difference). Static tree models cannot handle real-time grid forecasting effectively because they evaluate each timestamp independently, missing temporal sequence momentum. Informer's self-attention layers naturally model temporal dependencies across multi-step windows.
+
+Training Time Complexity
+
+Quick training turnarounds let control centers re-fit neural forecasters often as seasonal weather shifts. Table  compares execution times across 50 training epochs.
+
+Informer completed training in 111.20 seconds, running approximately three times faster than PatchTST (357.63 s) and Temporal Fusion Transformer (332.51 s).
+
+Error Analysis and Confusion Matrix
+
+We examined classification errors using Informer's test confusion matrix (Fig. ), represented mathematically below:
+
+Matrix rows represent true risk categories and columns represent predicted categories, ordered as $$.
+
+Informer correctly identified 915 High-Risk, 6,970 Low-Risk, and 880 Medium-Risk test windows. Misclassifications stayed mostly between adjacent tiers (337 High-Risk labeled Medium, 620 Low-Risk labeled Medium), which reflects continuous load and thermal changes. Crucially, severe false-negative errors remained minimal: Informer misclassified High-Risk as Low-Risk in only 50 of 1,302 true High-Risk cases (a 3.84\% false negative rate).
+
+Intelligent Alert System \& Rule-Based Explainability Layer
+
+Calculating gradient attributions via SHAP takes too long during sudden grid emergencies. To avoid operational delays, we route model classifications directly into a physical threshold parser.
+
+When a feeder receives a High risk prediction and transformer loading exceeds safety thresholds ($U_load > 0.85$), the system generates an overload advisory: "Electricity demand exceeds safety load thresholds, indicating a severe transformer capacity overload."
+
+When a feeder receives a Medium or High risk prediction while ambient heat stress crosses safety bounds ($THI > 28.0$), the system generates a thermal advisory: "Elevated environmental heat stress detected (THI: ), accelerating transformer thermal degradation risks."
+
+Control room engineers can forward these advisories to regional communities, giving residents time to run essential appliances early and postpone heavy power usage during peak hours.
+
+Practical Operational Impact
+
+A 2-hour forecast window gives dispatchers critical lead time. Control room staff can adjust feeder configurations, dispatch repair teams, and notify industrial users before circuit breakers trip. Moving from reactive load shedding to predictive load balancing minimizes unserved energy losses and stabilizes distribution circuits.
+
+Conclusion and Future Work
+
+Conclusion
+
+SmartGrid Sentinel gives regional grid operators in Bangladesh a 2-hour heads-up for load shedding risks. Keeping time sequences unbroken and fitting scaling parameters strictly on past data kept our evaluation leak-free. Evaluating 12 models on 65,983 feeder logs across 141 physical Upazilas showed Informer achieved the best overall results (88.44\% Weighted F1-score and 79.00\% recall on Medium Risk, training stably over 50 epochs). Connecting Informer to a physical rule parser gives dispatchers plain-text warnings right alongside numerical risk scores.
+
+Limitations
+
+Our work has two practical limits. First, telemetry logs cover 141 physical Upazilas across 15 districts in Sylhet and Chattogram rather than a nationwide grid network. Second, our pipeline focuses on a single 2-hour forecast step. Future tests will evaluate longer multi-step prediction horizons over larger geographic regions.
+
+Threats to Validity
+
+Primary validity risks involve local weather fluctuations and simplified feeder load assumptions. Restricting test evaluation to chronological splits keeps benchmark numbers realistic for actual control room operation.
+
+Future Work
+
+We plan to use Graph Neural Networks (GNNs) to map physical substation layouts and feeder line connections. Topology-aware GNNs will help dispatchers spot cascading blackout risks across linked transmission networks.

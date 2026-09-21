@@ -1,0 +1,6 @@
+Test Case,Input Risk Level,Alert Priority,Correct Explanation Generated,Correct Action Protocol,Status
+Low-Risk Alert Behavior,Low,GREEN (Normal Operation),True,True,PASSED
+Medium-Risk Alert Behavior,Medium,YELLOW (Warning Advisory),True,True,PASSED
+High-Risk Alert Behavior,High,RED (Urgent Emergency),True,True,PASSED
+Invalid/Missing Input Safe Handling,Invalid Upazila / Empty JSON,HTTP 400 / HTTP 422 Error Catch,True,Safe exception raised without backend server crash,PASSED
+Confidence Threshold & Probability Distribution,Medium,Mapped by highest probability prediction,Top confidence score: 63.92%,Probabilities sum to 1.0000 (Valid Softmax),PASSED

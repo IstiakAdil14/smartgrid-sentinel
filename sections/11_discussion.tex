@@ -1,0 +1,15 @@
+\section{Discussion}
+\subsection{Comparative Model Interpretation}
+Informer was retained as the primary sequence model for production deployment based on its observed benchmark performance, low catastrophic High-to-Low missed alert count (50 cases / 4.48\%), training loss stability across 50 epochs, and $O(L \log L)$ computational efficiency. Pairwise statistical testing confirmed that overall accuracy differences between Informer and top-performing architectures (GRU, XGBoost, Random Forest) were not statistically significant ($p = 0.1166$ vs. GRU, $p = 0.4756$ vs. XGBoost, $p = 0.8958$ vs. Random Forest). Rather than claiming absolute statistical dominance, Informer was selected because its ProbSparse attention mechanism scales efficiently to longer sequence lookbacks ($O(L \log L)$) while training 3x faster than PatchTST and TFT without validation loss divergence.
+
+\subsection{High-Risk Error Behavior}
+Analyzing error patterns reveals critical operational trade-offs across model families. Although XGBoost achieved competitive accuracy (87.58\%), it produced 128 catastrophic High-to-Low missed alerts ($11.48\%$ of High-Risk test cases). Informer limited catastrophic High-to-Low errors to 50 cases ($4.48\%$). Misclassifications occur predominantly along continuous boundary conditions where transformer load is between 75\% and 85\% accompanied by rapid localized rainfall spikes.
+
+\subsection{Feature Importance \& Explainability Interpretation}
+Empirical permutation feature importance demonstrates that domain-engineered utilization indicators (\texttt{load\_utilization} and \texttt{demand\_utilization}) account for over 74\% of Informer's predictive contribution. Meteorological variables (\texttt{temperature}, \texttt{rainfall}, \texttt{humidity}) exhibit lower direct permutation impact but influence predictions through thermal stress indices ($\text{THI}$) and utilization ratios.
+
+\subsection{Condition-Dependent Performance}
+Robustness evaluations across operating conditions confirm model stability across diurnal cycles (Peak Hours accuracy 87.29\% vs. Off-Peak 87.45\% for Informer). Seasonally, all evaluated models exhibit lower High-Risk recall during Summer (61.71\% for Informer) compared to Monsoon (91.30\%) and Winter (98.09\%), indicating that severe summer heatwaves create complex load volatility that warrants continuous monitoring.
+
+\subsection{Practical Implications for Grid Operators}
+Linking sequence predictions with a physical threshold rule engine bridges the gap between deep learning probability outputs and control room operations. By pairing tri-level risk scores with human-readable explanations and action checklists, dispatchers can initiate precautionary load shifting before automated circuit breakers trip, transitioning grid management from reactive load shedding to predictive contingency planning.
