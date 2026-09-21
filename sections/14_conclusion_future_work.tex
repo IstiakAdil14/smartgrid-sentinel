@@ -1,9 +1,0 @@
-\section{Conclusion and Future Work}
-SmartGrid Sentinel establishes a localized, 2-hour ahead load-shedding risk forecasting framework for electricity distribution networks in Bangladesh. Evaluating 12 candidate architectures across 65,983 telemetry snapshots (143 Upazilas, 1,000 feeders), the Informer sequence model achieved an overall accuracy of 87.41\%, a Macro F1-score of 77.68\%, and a Weighted F1-score of 88.44\% on 10,027 test sequence windows, limiting catastrophic High-to-Low missed alerts to 50 cases (4.48\%). Paired statistical testing (McNemar and Wilcoxon tests) confirmed that performance differences between Informer and top models (GRU, XGBoost, Random Forest) are not statistically significant ($p \ge 0.05$), justifying Informer's selection based on training stability, error behavior, and $O(L \log L)$ efficiency (111.20 s over 50 epochs). Controlled feature ablation verified the importance of domain utilization indicators, while robustness analysis revealed seasonal performance shifts during summer heatwaves. Routing predictions through a physical threshold rule engine converts risk probabilities into actionable control room advisories.
-
-Future work will focus on:
-\begin{enumerate}
-    \item Extending predictions to multi-step forecast horizons ($T+4\text{h}$, $T+6\text{h}$) to support long-term generation scheduling.
-    \item Incorporating Graph Neural Networks (GNNs) and Spatial-Temporal Graph Convolutional Networks (ST-GCNs) to model physical substation network topology and inter-feeder power transfers.
-    \item Expanding telemetry collection to cover all 495 Upazilas across Bangladesh for nationwide grid deployment.
-\end{enumerate}
