@@ -68,3 +68,7 @@ build/
 
 # Ignore demo videos
 screenDemo.mp4
+
+# Temporary & Working Folders
+scratch/
+v1_conference/
